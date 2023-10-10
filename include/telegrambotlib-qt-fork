@@ -1,0 +1,3 @@
+#include "../src/libs/telegrambotlib-qt-fork/src/telegrambot.h"
+#include "../src/libs/telegrambotlib-qt-fork/modules/httpserver/httpserver.h"
+#include "../src/libs/telegrambotlib-qt-fork/modules/sslserver/sslserver.h"
