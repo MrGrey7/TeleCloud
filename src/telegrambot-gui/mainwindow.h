@@ -2,7 +2,6 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <telegrambotlib-qt-fork>
 
 namespace Ui {
 class MainWindow;
@@ -23,7 +22,7 @@ private:
     Ui::MainWindow *ui;
 
 signals:
-    testButtonClick();
+    void testButtonClick();
 };
 
 #endif // MAINWINDOW_H

@@ -7,7 +7,7 @@ include( $$ROOT/app.pri )
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = telegrambot
+TARGET = telegrambot-deprecated
 TEMPLATE = app
 
 SOURCES += main.cpp

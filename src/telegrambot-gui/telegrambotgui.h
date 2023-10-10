@@ -4,6 +4,7 @@
 #include <QObject>
 #include "mainwindow.h"
 #include "messagebroker.h"
+#include "botcontroller.h"
 
 class TelegramBotGUI : public QObject
 {
@@ -13,7 +14,9 @@ public:
     void setup();
 
 private:
-    MessageBroker eventProcessor;
+    MessageBroker messageBroker;
+    BotController botController;
+
 signals:
 
 public slots:

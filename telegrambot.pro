@@ -1,6 +1,6 @@
 include( config.pri )
 include( mkdir.pri )
-include( features/features.pri )
+#include( features/features.pri )
 
 TEMPLATE = subdirs
 
@@ -22,4 +22,9 @@ HEADERS += $$files( include/*.h )
 HEADERS += $$files( include/Q* )
 
 OTHER_FILES += $$files( *.pri )
+
+QMAKE_CXXFLAGS += -Wno-inconsistent-missing-override \
+                  -Wno-unknown-pragmas
+
+greaterThan(QT_MAJOR_VERSION, 6): DEFINES += QT_DISABLE_DEPRECATED_UP_TO=0x050F00
 

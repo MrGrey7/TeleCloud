@@ -1,6 +1,118 @@
 #include "botcontroller.h"
 
-botcontroller::botcontroller(QObject *parent) : QObject(parent)
+BotController::BotController(QObject *parent) : QObject(parent)
+{
+
+}
+
+TelegramBot *BotController::getBot() const
+{
+    return bot;
+}
+
+void BotController::setBot(TelegramBot *value)
+{
+    bot = value;
+}
+
+void BotController::setup()
+{
+    QObject::connect(bot, SIGNAL(newMessage(TelegramBotUpdate)), this, SLOT(messageReceived(TelegramBotUpdate)));
+//    connect(bot, &TelegramBot::newMessage, this, &BotController::messageReceived);
+//    connect(bot, &TelegramBot::newMessage, [=](TelegramBotUpdate update) { qDebug() << "Slot invoked"; });
+    start();
+}
+
+void BotController::start()
+{
+    bot->startMessagePulling();
+}
+
+void BotController::sendMessage(const QString &text, TelegramBotUpdate update)
+{
+
+}
+
+void BotController::editMessage(const QString &text, TelegramBotUpdate update, TelegramBotMessage *message)
+{
+
+}
+
+void BotController::sendMessageHtml()
+{
+
+}
+
+void BotController::sendPhotoWeb(const QString &address, const QString &text, TelegramBotUpdate update)
+{
+
+}
+
+void BotController::messageReceived(TelegramBotUpdate update)
+{
+    testSendMessages(update);
+}
+
+void BotController::testSendMessages(TelegramBotUpdate update)
+{
+    // only handle Messages
+    if(update->type != TelegramBotMessageType::Message) return;
+
+    // simplify message access
+    TelegramBotMessage& message = *update->message;
+
+    // send message (Format: Normal)
+    TelegramBotMessage msgSent;
+    bot->sendMessage(message.chat.id,
+                "This is a Testmessage",
+                0,
+                TelegramBot::NoFlag,
+                TelegramKeyboardRequest(),
+                &msgSent);
+
+    // edit text of sent message (Format: Markdown)
+    bot->editMessageText(message.chat.id,
+                    msgSent.messageId,
+                    "This is an edited *Testmessage*",
+                    TelegramBot::Markdown);
+
+    // send message (Format: HTML, Keyboard: Inline (2 Rows, 1 Column), Reply to Message: Yes)
+    bot->sendMessage(message.chat.id,
+                "Please <b>choose</b>",
+                0,
+                TelegramBot::Html,
+                {
+                    // Keyboard
+                    {
+                        TelegramBot::constructInlineButton("Google", "", "https://www.google.com"),
+                    }, {
+                        TelegramBot::constructInlineButton("Reply with data", "MYDATA1"),
+                    }
+                });
+
+    // send photo (file location: web)
+    bot->sendPhoto(message.chat.id,
+              "https://www.kernel.org/theme/images/logos/tux.png",
+              "This is the Linux Tux");
+
+    // send audio (file location: local)
+    bot->sendAudio(message.chat.id,
+              "Maktone - Fluke01.mp3",
+              "Listen to this great art :-)",
+              "Maktone",
+              "Fluke01");
+
+    // send video chat note (file location: QByteArray)
+    QFile file("testvideo.mp4");
+    file.open(QFile::ReadOnly);
+    QByteArray content = file.readAll();
+    bot->sendVideoNote(msgSent.chat.id, content);
+
+    // send sticker (file location: telegram server)
+    bot->sendSticker(message.chat.id, "CXXXXXXXXXXXXXXXXXXXXXXX");
+}
+
+void BotController::testButtonClicked()
 {
 
 }
