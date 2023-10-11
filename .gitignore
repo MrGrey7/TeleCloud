@@ -56,3 +56,9 @@ compile_commands.json
 # Windows executables
 *.exe
 *.idx
+
+# Bot Config including API token
+config/auth.cfg
+
+#Compiled binaries
+bin/
