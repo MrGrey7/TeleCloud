@@ -48,6 +48,24 @@ void BotController::sendPhotoWeb(const QString &address, const QString &text, Te
 
 }
 
+QString BotController::getChannelId() const
+{
+    return channelId;
+}
+
+void BotController::setChannelId(const QString &newChannelId)
+{
+    if (channelId == newChannelId)
+        return;
+    channelId = newChannelId;
+    emit channelIdChanged();
+}
+
+void BotController::resetChannelId()
+{
+    setChannelId({}); // TODO: Adapt to use your actual default value
+}
+
 void BotController::messageReceived(TelegramBotUpdate update)
 {
     testSendMessages(update);
@@ -55,6 +73,7 @@ void BotController::messageReceived(TelegramBotUpdate update)
 
 void BotController::testSendMessages(TelegramBotUpdate update)
 {
+    qDebug() << "BotController::testSendMessages()";
     // only handle Messages
     if(update->type != TelegramBotMessageType::Message) return;
 

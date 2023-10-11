@@ -29,10 +29,19 @@ public:
 //    void sendAudioLocal()
 
 
+    QString getChannelId() const;
+    void setChannelId(const QString &newChannelId);
+    void resetChannelId();
+
 private:
     TelegramBot *bot = nullptr;
+    QString channelId;
+
+    Q_PROPERTY(QString channelId READ getChannelId WRITE setChannelId RESET resetChannelId NOTIFY channelIdChanged FINAL)
 
 signals:
+
+    void channelIdChanged();
 
 public slots:
     void messageReceived(TelegramBotUpdate update);

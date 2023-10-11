@@ -11,11 +11,14 @@ class TelegramBotGUI : public QObject
     Q_OBJECT
 public:
     explicit TelegramBotGUI(QObject *parent = 0);
+    void loadConfig();
     void setup();
 
 private:
     MessageBroker messageBroker;
     BotController botController;
+    QString botToken;
+    QString channelId;
 
 signals:
 
