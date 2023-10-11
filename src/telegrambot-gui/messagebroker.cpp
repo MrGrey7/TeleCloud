@@ -22,12 +22,12 @@ void MessageBroker::setMainWindow(MainWindow *value)
 
 void MessageBroker::connectMainWindow()
 {
-    connect(mainWindow, SIGNAL(testButtonClick()), this, SLOT(testButtonClicked()));
+    connect(mainWindow, &MainWindow::testButtonClick, this, &MessageBroker::testButtonClicked);
 }
 
 void MessageBroker::connectBotController()
 {
-    connect(this, SIGNAL(mainWindowTestButtonClick()), botController, SLOT(testButtonClicked()));
+    connect(this, &MessageBroker::mainWindowTestButtonClick, botController, &BotController::testButtonClicked);
 }
 
 BotController *MessageBroker::getBotController() const
@@ -38,6 +38,7 @@ BotController *MessageBroker::getBotController() const
 void MessageBroker::setBotController(BotController *value)
 {
     botController = value;
+    connectBotController();
 }
 
 void MessageBroker::testButtonClicked()

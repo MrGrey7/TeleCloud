@@ -133,5 +133,67 @@ void BotController::testSendMessages(TelegramBotUpdate update)
 
 void BotController::testButtonClicked()
 {
+    // Send message to channel
 
+    // send message (Format: Normal)
+    TelegramBotMessage msgSent;
+    bot->sendMessage(channelId,
+                     "This is a Testmessage",
+                     0,
+                     TelegramBot::NoFlag,
+                     TelegramKeyboardRequest(),
+                     &msgSent);
+
+    // send photo (file location: web)
+    bot->sendPhoto(channelId,
+                   "https://www.kernel.org/theme/images/logos/tux.png",
+                   "This is the Linux Tux");
+
+//    // send message (Format: HTML, Keyboard: Inline (2 Rows, 1 Column), Reply to Message: Yes)
+//    bot->sendMessage(channelId,
+//                     "Please <b>choose</b>",
+//                     0,
+//                     TelegramBot::Html,
+//                     {
+//                         // Keyboard
+//                         {
+//                             TelegramBot::constructInlineButton("Google", "", "https://www.google.com"),
+//                         }, {
+//                             TelegramBot::constructInlineButton("Reply with data", "MYDATA1"),
+//                         }
+//                     });
+
+    // send audio (file location: local)
+    bot->sendAudio(channelId,
+                   "testfiles\\audio.mp3",
+                   "Listen to this great art :-)",
+                   "Author",
+                   "Track");
+
+//    // send video (file location: local)
+//    bot->sendVideo(channelId,
+//                   "testfiles\\video_8mb.mp4",
+//                   "8MB Video");
+
+    // send video (file location: local)
+//    bot->sendVideo(channelId,
+//                   "testfiles\\video_30mb.mp4",
+//                   "30MB Video");
+
+    // send video (file location: local)
+    bot->sendVideo(channelId,
+                   "testfiles\\video_100mb.mp4",
+                   "100MB Video");
+
+//    // send video (file location: local)
+//    bot->sendVideo(channelId,
+//                   "testfiles\\video_1gb.mp4",
+//                   "1GB Video");
+
+//    // send video (file location: local)
+//    bot->sendVideo(channelId,
+//                   "testfiles\\video_2gb.mp4",
+//                   "2GB Video");
+
+    qDebug() << "BotController::testButtonClicked()";
 }
