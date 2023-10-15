@@ -31,7 +31,7 @@ void TelegramBotGUI::setup()
     TelegramBot *bot = new TelegramBot(config.botToken);
     botController.setChannelId(config.channelId);
     botController.setBot(bot);
-    botController.setup();
+    botController.initialize();
     qDebug() << "finished";
 
     // Message Broker

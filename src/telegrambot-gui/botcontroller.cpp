@@ -15,7 +15,7 @@ void BotController::setBot(TelegramBot *value)
     bot = value;
 }
 
-void BotController::setup()
+void BotController::initialize()
 {
     QObject::connect(bot, SIGNAL(newMessage(TelegramBotUpdate)), this, SLOT(messageReceived(TelegramBotUpdate)));
 //    connect(bot, &TelegramBot::newMessage, this, &BotController::messageReceived);
@@ -180,15 +180,15 @@ void BotController::testButtonClicked()
 //                   "testfiles\\video_30mb.mp4",
 //                   "30MB Video");
 
-    // send video (file location: local)
-    bot->sendVideo(channelId,
-                   "testfiles\\video_100mb.mp4",
-                   "100MB Video");
-
 //    // send video (file location: local)
 //    bot->sendVideo(channelId,
-//                   "testfiles\\video_1gb.mp4",
-//                   "1GB Video");
+//                   "testfiles\\video_100mb.mp4",
+//                   "100MB Video");
+
+    // send video (file location: local)
+    bot->sendVideo(channelId,
+                   "testfiles\\video_1gb.mp4",
+                   "1GB Video");
 
 //    // send video (file location: local)
 //    bot->sendVideo(channelId,

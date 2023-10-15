@@ -14,7 +14,7 @@ public:
     TelegramBot *getBot() const;
     void setBot(TelegramBot *value);
 
-    void setup();
+    void initialize();
 
     void start();
 
