@@ -1,0 +1,11 @@
+../../build/debug/telegrambot-gui/obj/dbmanager.o
+../../build/debug/telegrambot-gui/obj/mainwindow.o
+../../build/debug/telegrambot-gui/obj/telegrambotgui.o
+../../build/debug/telegrambot-gui/obj/main.o
+../../build/debug/telegrambot-gui/obj/botcontroller.o
+../../build/debug/telegrambot-gui/obj/messagebroker.o
+../../build/debug/telegrambot-gui/obj/moc_dbmanager.o
+../../build/debug/telegrambot-gui/obj/moc_mainwindow.o
+../../build/debug/telegrambot-gui/obj/moc_telegrambotgui.o
+../../build/debug/telegrambot-gui/obj/moc_botcontroller.o
+../../build/debug/telegrambot-gui/obj/moc_messagebroker.o

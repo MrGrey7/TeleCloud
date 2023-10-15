@@ -5,6 +5,8 @@
 #include "mainwindow.h"
 #include "messagebroker.h"
 #include "botcontroller.h"
+#include "dbmanager.h"
+#include "types.h"
 
 class TelegramBotGUI : public QObject
 {
@@ -17,8 +19,8 @@ public:
 private:
     MessageBroker messageBroker;
     BotController botController;
-    QString botToken;
-    QString channelId;
+    DbManager dbManager;
+    Config  config;
 
 signals:
 

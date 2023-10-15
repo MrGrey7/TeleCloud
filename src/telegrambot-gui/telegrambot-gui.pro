@@ -1,4 +1,4 @@
-QT += core gui xml network
+QT += core gui xml network sql
 
 ROOT = ../..
 include( $$ROOT/common.pri )
@@ -6,14 +6,14 @@ include( $$ROOT/app.pri )
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++14
-
+CONFIG += c++17
 TARGET = telegrambot
 #CONFIG += console
 
 TEMPLATE = app
 
 SOURCES += \
+    dbmanager.cpp \
     mainwindow.cpp \
     telegrambotgui.cpp \
     main.cpp \
@@ -21,10 +21,12 @@ SOURCES += \
     messagebroker.cpp
 
 HEADERS += \
+    dbmanager.h \
     mainwindow.h \
     telegrambotgui.h \
     botcontroller.h \
-    messagebroker.h
+    messagebroker.h \
+    types.h
 
 FORMS += \
     mainwindow.ui

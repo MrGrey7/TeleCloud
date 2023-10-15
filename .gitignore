@@ -62,3 +62,5 @@ config/auth.cfg
 
 #Compiled binaries
 bin/
+*.ini
+*.db
