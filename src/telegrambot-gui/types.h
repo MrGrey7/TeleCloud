@@ -3,6 +3,8 @@
 
 #include <QString>
 
+#define qNamedDebug() qDebug() << Q_FUNC_INFO
+
 // Config keys
 const QString botApiTokenKey        = "BOT_API_TOKEN";
 const QString channelIdKey          = "CHANNEL_ID";
@@ -41,5 +43,20 @@ struct RecordingMetadata {
     qint64  startDate = -1;
     QString status;
 };
+
+struct GuiCommand {
+    enum Type {
+        Upload,
+        Download
+    };
+
+    GuiCommand() {}
+    GuiCommand(Type commandType, QString commandParams = "")
+        : type(commandType), params(commandParams) {}
+    Type type = Upload;
+    QString params;
+};
+
+Q_DECLARE_METATYPE(GuiCommand);
 
 #endif // TYPES_H

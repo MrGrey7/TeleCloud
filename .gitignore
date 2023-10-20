@@ -64,3 +64,5 @@ config/auth.cfg
 bin/
 *.ini
 *.db
+*.telegrambot
+*.telegrambot

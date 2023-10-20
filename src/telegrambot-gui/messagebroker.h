@@ -4,6 +4,7 @@
 #include <QObject>
 #include "mainwindow.h"
 #include "botcontroller.h"
+#include "types.h"
 
 class MessageBroker : public QObject
 {
@@ -26,10 +27,10 @@ private:
     BotController *botController = nullptr;
 
 signals:
-    void mainWindowTestButtonClick();
+    void mainWindowGuiCommandReceived(GuiCommand);
 
 public slots:
-    void testButtonClicked();
+    void guiCommandReceived(GuiCommand command);
 };
 
 #endif // EVENTPROCESSOR_H

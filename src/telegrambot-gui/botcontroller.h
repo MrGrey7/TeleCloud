@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <telegrambotlib-qt-fork>
+#include "types.h"
 
 class BotController : public QObject
 {
@@ -46,7 +47,8 @@ signals:
 public slots:
     void messageReceived(TelegramBotUpdate update);
     void testSendMessages(TelegramBotUpdate update);
-    void testButtonClicked();
+    void testUpload();
+    void guiCommandReceived(GuiCommand command);
 };
 
 #endif // BOTCONTROLLER_H

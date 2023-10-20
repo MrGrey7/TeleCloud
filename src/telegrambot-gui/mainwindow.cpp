@@ -18,7 +18,14 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::on_button_download_clicked()
 {
-    emit testButtonClick();
+    emit sendGuiCommand(GuiCommand(GuiCommand::Download));
 }
+
+
+void MainWindow::on_button_upload_clicked()
+{
+    emit sendGuiCommand(GuiCommand(GuiCommand::Upload));
+}
+

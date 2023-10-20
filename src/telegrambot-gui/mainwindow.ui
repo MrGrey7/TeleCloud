@@ -14,17 +14,30 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="button_upload">
     <property name="geometry">
      <rect>
       <x>50</x>
       <y>30</y>
-      <width>80</width>
+      <width>91</width>
       <height>21</height>
      </rect>
     </property>
     <property name="text">
-     <string>Test</string>
+     <string>Test  Upload</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="button_download">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>60</y>
+      <width>91</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Test  Download</string>
     </property>
    </widget>
   </widget>
@@ -34,7 +47,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

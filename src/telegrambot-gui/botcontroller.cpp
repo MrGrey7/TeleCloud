@@ -1,4 +1,5 @@
 #include "botcontroller.h"
+#include <QElapsedTimer>
 
 BotController::BotController(QObject *parent) : QObject(parent)
 {
@@ -131,23 +132,23 @@ void BotController::testSendMessages(TelegramBotUpdate update)
     bot->sendSticker(message.chat.id, "CXXXXXXXXXXXXXXXXXXXXXXX");
 }
 
-void BotController::testButtonClicked()
+void BotController::testUpload()
 {
     // Send message to channel
 
     // send message (Format: Normal)
-    TelegramBotMessage msgSent;
-    bot->sendMessage(channelId,
-                     "This is a Testmessage",
-                     0,
-                     TelegramBot::NoFlag,
-                     TelegramKeyboardRequest(),
-                     &msgSent);
+//    TelegramBotMessage msgSent;
+//    bot->sendMessage(channelId,
+//                     "This is a Testmessage",
+//                     0,
+//                     TelegramBot::NoFlag,
+//                     TelegramKeyboardRequest(),
+//                     &msgSent);
 
-    // send photo (file location: web)
-    bot->sendPhoto(channelId,
-                   "https://www.kernel.org/theme/images/logos/tux.png",
-                   "This is the Linux Tux");
+//    // send photo (file location: web)
+//    bot->sendPhoto(channelId,
+//                   "https://www.kernel.org/theme/images/logos/tux.png",
+//                   "This is the Linux Tux");
 
 //    // send message (Format: HTML, Keyboard: Inline (2 Rows, 1 Column), Reply to Message: Yes)
 //    bot->sendMessage(channelId,
@@ -164,36 +165,67 @@ void BotController::testButtonClicked()
 //                     });
 
     // send audio (file location: local)
-    bot->sendAudio(channelId,
-                   "testfiles\\audio.mp3",
-                   "Listen to this great art :-)",
-                   "Author",
-                   "Track");
+    TelegramBotMessage response;
+
+//    bot->sendAudio(channelId,
+//                   "testfiles\\audio.mp3",
+//                   "Listen to this great art :-)",
+//                   "Author",
+//                   "Track",
+//                   -1, 0, TelegramBot::NoFlag, TelegramKeyboardRequest(),
+//                    &response);
 
 //    // send video (file location: local)
 //    bot->sendVideo(channelId,
 //                   "testfiles\\video_8mb.mp4",
 //                   "8MB Video");
 
-    // send video (file location: local)
+//     send video (file location: local)
 //    bot->sendVideo(channelId,
-//                   "testfiles\\video_30mb.mp4",
-//                   "30MB Video");
+//                   QUrl("testfiles//video_30mb.mp4"),
+//                   "30MB Video",
+//                   -1, -1, -1, 0, TelegramBot::NoFlag, TelegramKeyboardRequest(),
+//                   &response);
 
-//    // send video (file location: local)
+    // send video (file location: local)
 //    bot->sendVideo(channelId,
 //                   "testfiles\\video_100mb.mp4",
-//                   "100MB Video");
+//                   "100MB Video",
+//                    -1, -1, -1, 0, TelegramBot::NoFlag, TelegramKeyboardRequest(),
+//                    response);
 
     // send video (file location: local)
+    QElapsedTimer timer;
+    timer.start();
     bot->sendVideo(channelId,
-                   "testfiles\\video_1gb.mp4",
-                   "1GB Video");
+                   QUrl("testfiles//video_30mb.mp4"),
+                   "1GB Video",
+                   -1, -1, -1, 0, TelegramBot::NoFlag, TelegramKeyboardRequest(),
+                   &response);
+    qint64 uploadTime = timer.elapsed();
+    double speedMBSec = double(response.video.fileSize / ((double)uploadTime / 1000.0)) / 1000000.0;
+    qNamedDebug() << "sending " << response.video.fileSize / 1000000 << "mb video took" << uploadTime << "ms, speed " << speedMBSec << "mb/sec";
 
 //    // send video (file location: local)
 //    bot->sendVideo(channelId,
 //                   "testfiles\\video_2gb.mp4",
 //                   "2GB Video");
+    qNamedDebug() << "fileId original: " << response.video.fileId;
 
-    qDebug() << "BotController::testButtonClicked()";
+    qNamedDebug() << "uploading by fileId";
+    QVariant variant(response.video.fileId);
+    timer.restart();
+    bot->sendVideo(channelId,
+                   response.video.fileId,
+                   "video upload by file id",
+                   -1, -1, -1, 0, TelegramBot::NoFlag, TelegramKeyboardRequest(),
+                   &response);
+    qNamedDebug() << "sending 1GB video by fileId took" << timer.elapsed() << "ms";
+    qNamedDebug() << "filedId: " << response.video.fileId;
+}
+
+void BotController::guiCommandReceived(GuiCommand command)
+{
+    qNamedDebug() << command.type;
+    testUpload();
 }

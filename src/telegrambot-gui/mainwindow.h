@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "types.h"
 
 namespace Ui {
 class MainWindow;
@@ -16,13 +17,15 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_pushButton_clicked();
+    void on_button_download_clicked();
+
+    void on_button_upload_clicked();
 
 private:
     Ui::MainWindow *ui;
 
 signals:
-    void testButtonClick();
+    void sendGuiCommand(GuiCommand);
 };
 
 #endif // MAINWINDOW_H
