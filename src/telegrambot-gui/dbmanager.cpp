@@ -1,5 +1,7 @@
-#include "dbmanager.h"
+﻿#include "dbmanager.h"
+
 #include <QFile>
+#include <QDir>
 
 #include <QSqlQuery>
 #include <QSqlDriver>
@@ -11,7 +13,11 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
+#include <QDateTime>
+#include <QLocale>
+
 #include <QDebug>
+
 
 const QString sqlConnectionName = "SQLite";
 //const QString sqlUsername = "TelegramBot";
@@ -33,26 +39,18 @@ bool DbManager::openDb(const QString &path)
 //    db.setUserName(sqlUsername);
     if (!db.open())
         qDebug() << "DbManager::DbManager(): error: failed to open " << path;
-    QStringList tables = db.tables();
-//    QVector<QSqlRecord *> records;
-    for (auto table : tables) {
-        QSqlRecord record = db.record(table);;
-        qDebug() << "Table " << table << ", " << record.count() << " fields";
-        for (int i = 0; i < record.count(); i++) {
-            QSqlField field = record.field(i);
-            qDebug() << "Name: " << field.name() << "; type: " << field.type();
-        }
+//    QStringList tables = db.tables();
+////    QVector<QSqlRecord *> records;
+//    for (auto table : tables) {
+//        QSqlRecord record = db.record(table);;
+//        qDebug() << "Table " << table << ", " << record.count() << " fields";
+//        for (int i = 0; i < record.count(); i++) {
+//            QSqlField field = record.field(i);
+//            qDebug() << "Name: " << field.name() << "; type: " << field.type();
+//        }
 
-    }
+//    }
 
-    QSqlQuery q(QSqlDatabase::database(sqlConnectionName));
-    q.exec("select * from videos");
-
-    while(q.next()) {
-        qDebug() << q.value(0) << q.value(1) << q.value(2);
-    }
-    int x = 0;
-//    db.close();
 }
 
 void DbManager::readJsonTest()
@@ -73,12 +71,36 @@ void DbManager::readJsonTest()
     int x = 0;
 }
 
-void DbManager::syncJsonMetadata()
+void DbManager::readAllJsonMetadata()
 {
-    RecordingMetadata metadata;
-    readMetadata(R"()",
-                 metadata);
+    QDir directory(recordingsJsonPath);
+    if (!directory.exists()) {
+        qWarning() << "DbManager::readAllJsonMetadata: error: metadata directory" << recordingsJsonPath << "does not exist";
+        return;
+    }
+    if (!QSqlDatabase::database(sqlConnectionName).isOpen()) {
+        qWarning() << "DbManager::readAllJsonMetadata: error: database is not opened";
+        return;
+    }
 
+    QStringList jsons = directory.entryList(QStringList() << "*.json", QDir::Files);
+    int n = jsons.size();
+    for(int i = 0; i < n; i++) {
+        QString &filename = jsons[i];
+        RecordingMetadata metadata;
+        readMetadata(QString(R"RX(%1/%2)RX").arg(recordingsJsonPath).arg(filename),
+                     metadata);
+        if (metadata.status.compare("FINISHED") != 0) // if recording is not FINISHED skip it
+            continue;
+        if (!writeRecordingToDb(metadata)) {
+            qWarning() << "DbManager::readAllJsonMetadata: error: writeRecordingToDb() failed for " << filename;
+        }
+        emit readMetadataProgressChanged(i + 1, n);
+    }
+}
+
+bool DbManager::writeRecordingToDb(RecordingMetadata &metadata)
+{
     QSqlDatabase db = QSqlDatabase::database(sqlConnectionName);
 
     // Inserting the model into "models" table if they don't exist yet
@@ -94,6 +116,7 @@ void DbManager::syncJsonMetadata()
             qWarning() << "Query failed: " << q.executedQuery();
             qWarning() << "DB text: " << q.lastError().databaseText();
             qWarning() << "Driver text: " << q.lastError().driverText();
+            return false;
         }
     } else
         qWarning("DbManager::syncJsonMetadata: error: empty model name");
@@ -101,7 +124,7 @@ void DbManager::syncJsonMetadata()
     // Inserting the recording metadata into the "recordings" table
     if (!metadata.modelData.name.isEmpty()) {
         QSqlQuery q(db);
-        q.prepare(QString("INSERT OR IGNORE INTO recordings_test (video_path, contactsheet_path, metadata_path, generated_id, last_size_update, model_name,"
+        q.prepare(QString("INSERT OR IGNORE INTO recordings (video_path, contactsheet_path, metadata_path, generated_id, last_size_update, model_name,"
                           "pinned, progress, selected_resolution, single_file, size_bytes, start_date, status) "
                           "VALUES (:video_path, :contactsheet_path, :metadata_path, :generated_id, :last_size_update, :model_name,"
                           ":pinned, :progress, :selected_resolution, :single_file, :size_bytes, :start_date, :status)"));
@@ -123,10 +146,13 @@ void DbManager::syncJsonMetadata()
             qWarning() << "Query failed: " << q.executedQuery();
             qWarning() << "DB text: " << q.lastError().databaseText();
             qWarning() << "Driver text: " << q.lastError().driverText();
+            return false;
         }
-    } else
+    } else {
         qWarning("DbManager::syncJsonMetadata: error: recording with no video file path");
-
+        return false;
+    }
+    return true;
 }
 
 void DbManager::readMetadata(const QString &metadataJsonPath, RecordingMetadata &metadata)
@@ -135,7 +161,7 @@ void DbManager::readMetadata(const QString &metadataJsonPath, RecordingMetadata 
     file.open(QIODevice::ReadOnly | QIODevice::Text);
     QString text = file.readAll();
     file.close();
-    qDebug() << text;
+//    qDebug() << text;
     QJsonDocument doc = QJsonDocument::fromJson(text.toUtf8());
     QJsonObject json = doc.object();
 
@@ -196,6 +222,156 @@ void DbManager::readMetadata(const QString &metadataJsonPath, RecordingMetadata 
         metadata.status = v.toVariant().toString();
 }
 
+void DbManager::fillQueueWithRecordings()
+{
+    QSqlDatabase db = QSqlDatabase::database(sqlConnectionName);
+    if (!db.isOpen()) {
+        qNamedDebug() << "error: db is not opened";
+        return;
+    }
+    QSqlQuery q(db);
+    q.prepare(R"(select recording_id, video_path, video_exists, contactsheet_path, contactsheet_exists,
+                model_name, size_bytes, status, start_date, upload_id
+                from recordings
+                where upload_id IS NULL and status = 'FINISHED' and video_exists != 0
+                and size_bytes > 20000000 and size_bytes < 2000000000;)");
+
+    if (!q.exec()) {
+        qWarning() << "Query failed: " << q.executedQuery();
+        qWarning() << "DB text: " << q.lastError().databaseText();
+        qWarning() << "Driver text: " << q.lastError().driverText();
+    }
+    int videoPathColumn = q.record().indexOf("video_path");
+    int recordingIdColumn = q.record().indexOf("recording_id");
+    int modelNameColumn = q.record().indexOf("model_name");
+    int contactSheetColumn = q.record().indexOf("contactsheet_path");
+    int startDateColumn = q.record().indexOf("start_date");
+    int sizeBytsColumn = q.record().indexOf("size_bytes");
+//    int n = 0;
+    QVector<RecordingToUpload> selectedUploads;
+    while (q.next()) {
+//        n++;
+        RecordingToUpload upload;
+        upload.videoPath = q.value(videoPathColumn).toString();
+        upload.contactSheetPath = q.value(contactSheetColumn).toString();
+        upload.recordingId = q.value(recordingIdColumn).toInt();
+        upload.caption = generateCaption(q.value(modelNameColumn).toString(), q.value(startDateColumn).toLongLong());
+        upload.sizeBytes = q.value(sizeBytsColumn).toLongLong();
+        selectedUploads.append(upload);
+    }
+
+    emit loadedRecordingsToUpload(selectedUploads);
+}
+
+QString DbManager::generateCaption(QString modelName, qint64 date)
+{
+    QDateTime dt = QDateTime::fromMSecsSinceEpoch(date);
+    QString caption;
+    caption += '#' + modelName + ' ';
+    if (dt.isValid()) {
+        QLocale locale(QLocale("en_US"));
+        caption += '#' + locale.toString(dt, "MMMM") + ' ';
+        caption += '#' + dt.date().toString("yyyy") + "y ";
+        caption += dt.time().toString();
+    }
+    return caption;
+}
+
+void DbManager::updateFileStatus()
+{
+    QSqlDatabase db = QSqlDatabase::database(sqlConnectionName);
+    if (!db.isOpen()) {
+        qNamedDebug() << "error: db is not opened";
+        return;
+    }
+    QSqlQuery q(db);
+    q.prepare("select recording_id, video_path, video_exists, contactsheet_path, contactsheet_exists "
+              "from recordings;");
+
+    if (!q.exec()) {
+        qWarning() << "Query failed: " << q.executedQuery();
+        qWarning() << "DB text: " << q.lastError().databaseText();
+        qWarning() << "Driver text: " << q.lastError().driverText();
+    }
+    int recordingIdColumn = q.record().indexOf("recording_id");
+    int videoPathColumn = q.record().indexOf("video_path");
+    int videoExistsColumn = q.record().indexOf("video_exists");
+    int contactSheetPathColumn = q.record().indexOf("contactsheet_path");
+    int contactSheetExistsColumn = q.record().indexOf("contactsheet_exists");
+
+    while (q.next()) {
+        bool needUpdate = false;
+        int oldVideoExists = q.value(videoExistsColumn).toInt();
+        int oldContactSheetExists = q.value(contactSheetExistsColumn).toInt();
+        int videoExists = QFile::exists(q.value(videoPathColumn).toString());
+        int contactSheetExists = QFile::exists(q.value(contactSheetPathColumn).toString());
+        if (oldVideoExists != videoExists || oldContactSheetExists != contactSheetExists) {
+            QSqlQuery update(db);
+            update.prepare(QString("UPDATE recordings SET video_exists = %1, contactsheet_exists = %2 WHERE recording_id = %3")
+                               .arg(videoExists).arg(contactSheetExists).arg(q.value(recordingIdColumn).toInt()));
+
+            if (!update.exec()) {
+                qWarning() << "Query failed: " << update.executedQuery();
+                qWarning() << "DB text: " << update.lastError().databaseText();
+                qWarning() << "Driver text: " << update.lastError().driverText();
+            }
+        }
+
+    }
+}
+
+void DbManager::processMessage(GenericMessage message)
+{
+    if (message.type == GenericMessage::SyncMetadata)
+        readAllJsonMetadata();
+    if (message.type == GenericMessage::FillQueue)
+        fillQueueWithRecordings();
+    if (message.type == GenericMessage::UpdateFileStatus)
+        updateFileStatus();
+}
+
+void DbManager::writeUploadToDb(RecordingUploadInfo upload)
+{
+    QSqlDatabase db = QSqlDatabase::database(sqlConnectionName);
+    if (!db.isOpen()) {
+        qNamedDebug() << "error: db is not opened";
+        return;
+    }
+    QSqlQuery q(db);
+    // Insert into video_uploads table
+    q.prepare(QString("INSERT OR IGNORE INTO uploads (chat_id, video_message_id, video_file_id, "
+                      "contactsheet_message_id, contactsheet_file_id, date, type)"
+                      "VALUES (:chat_id, :video_message_id, :video_file_id,"
+                      ":contactsheet_message_id, :contactsheet_file_id, :date, :type)"));
+    q.bindValue(":chat_id", upload.chatId);
+    q.bindValue(":video_message_id", upload.video.messageId);
+    q.bindValue(":video_file_id", upload.video.fileId);
+    q.bindValue(":contactsheet_message_id", upload.contactsheet.messageId);
+    q.bindValue(":contactsheet_file_id", upload.contactsheet.fileId);
+    q.bindValue(":date", QDateTime::currentMSecsSinceEpoch());
+    q.bindValue(":type", "Recording");
+    if (!q.exec()) {
+        qNamedDebug() << "Query failed: " << q.executedQuery();
+        qWarning() << "DB text: " << q.lastError().databaseText();
+        qWarning() << "Driver text: " << q.lastError().driverText();
+        return;
+    } else {
+        qNamedDebug() << QString("Successfully inserted upload, id = %2")
+                             .arg(q.lastInsertId().toInt());
+    }
+    int insertedId = q.lastInsertId().toInt();
+
+    // update recordings table
+    q.prepare(QString("UPDATE recordings SET upload_id = %1 WHERE recording_id = %2")
+              .arg(insertedId).arg(upload.recordingId));
+    if (!q.exec()) {
+        qNamedDebug() << "Query failed: " << q.executedQuery();
+        qWarning() << "DB text: " << q.lastError().databaseText();
+        qWarning() << "Driver text: " << q.lastError().driverText();
+        return;
+    }
+}
+
 QString DbManager::getDbPath() const
 {
     return dbPath;
@@ -213,7 +389,7 @@ void DbManager::initialize()
 {
     openDb(dbPath);
 //    readJsonTest();
-    syncJsonMetadata();
+//    readAllJsonMetadata();
 }
 
 QString DbManager::getRecordingsJsonPath() const

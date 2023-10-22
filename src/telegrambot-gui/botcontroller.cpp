@@ -1,9 +1,10 @@
 #include "botcontroller.h"
 #include <QElapsedTimer>
+#include <QStringLiteral>
 
 BotController::BotController(QObject *parent) : QObject(parent)
 {
-
+    connect(this, &BotController::pausedChanged, this, &BotController::startUploading);
 }
 
 TelegramBot *BotController::getBot() const
@@ -18,8 +19,8 @@ void BotController::setBot(TelegramBot *value)
 
 void BotController::initialize()
 {
-    QObject::connect(bot, SIGNAL(newMessage(TelegramBotUpdate)), this, SLOT(messageReceived(TelegramBotUpdate)));
-//    connect(bot, &TelegramBot::newMessage, this, &BotController::messageReceived);
+//    QObject::connect(bot, SIGNAL(newMessage(TelegramBotUpdate)), this, SLOT(processMessage(TelegramBotUpdate)));
+//    connect(bot, &TelegramBot::newMessage, this, &BotController::processMessage);
 //    connect(bot, &TelegramBot::newMessage, [=](TelegramBotUpdate update) { qDebug() << "Slot invoked"; });
     start();
 }
@@ -49,6 +50,13 @@ void BotController::sendPhotoWeb(const QString &address, const QString &text, Te
 
 }
 
+void BotController::enqueueVideo(RecordingToUpload upload)
+{
+    uploadQueue.append(upload);
+    emit uploadQueueChanged(uploadQueue.size());
+    emit uploadEnqueued();
+}
+
 QString BotController::getChannelId() const
 {
     return channelId;
@@ -67,9 +75,18 @@ void BotController::resetChannelId()
     setChannelId({}); // TODO: Adapt to use your actual default value
 }
 
-void BotController::messageReceived(TelegramBotUpdate update)
+bool BotController::getPaused() const
 {
-    testSendMessages(update);
+    return paused;
+}
+
+void BotController::setPaused(bool newPaused)
+{
+    if (paused == newPaused)
+        return;
+    qNamedDebug() << "paused = " << newPaused;
+    paused = newPaused;
+    emit pausedChanged();
 }
 
 void BotController::testSendMessages(TelegramBotUpdate update)
@@ -198,13 +215,19 @@ void BotController::testUpload()
     QElapsedTimer timer;
     timer.start();
     bot->sendVideo(channelId,
-                   QUrl("testfiles//video_30mb.mp4"),
-                   "1GB Video",
+                   QUrl::fromLocalFile("testfiles/video_2gb.mp4"),
+                   "2 gb video",
                    -1, -1, -1, 0, TelegramBot::NoFlag, TelegramKeyboardRequest(),
                    &response);
     qint64 uploadTime = timer.elapsed();
     double speedMBSec = double(response.video.fileSize / ((double)uploadTime / 1000.0)) / 1000000.0;
     qNamedDebug() << "sending " << response.video.fileSize / 1000000 << "mb video took" << uploadTime << "ms, speed " << speedMBSec << "mb/sec";
+
+    bot->sendPhoto(channelId,
+                   QUrl::fromLocalFile("testfiles/ts_as_mp4.jpg"),
+                   ".ts as .mp4 contactsheet",
+                   response.messageId, TelegramBot::NoFlag, TelegramKeyboardRequest(),
+                   &response);
 
 //    // send video (file location: local)
 //    bot->sendVideo(channelId,
@@ -224,8 +247,126 @@ void BotController::testUpload()
     qNamedDebug() << "filedId: " << response.video.fileId;
 }
 
-void BotController::guiCommandReceived(GuiCommand command)
+void BotController::testDownload()
 {
-    qNamedDebug() << command.type;
-    testUpload();
+    TelegramBotFile file = bot->getFile("BAACAgIAAx0EcBfiagADjmU1FWvhF7sCP0AgJpidU3VlN1dgAAK4OAACvvGxSTRWn94s_-2zLwQ", true);
+    int x = 0;
+}
+
+void BotController::processMessage(GenericMessage command)
+{
+    qNamedDebug() << command.type << sender();
+    switch (command.type) {
+        case GenericMessage::Upload:
+            testUpload();
+            break;
+        case GenericMessage::Download:
+            testDownload();
+            break;
+        case GenericMessage::UploadStart:
+            setPaused(false);
+            break;
+        case GenericMessage::UploadStop:
+            setPaused(true);
+            break;
+        default:
+            break;
+    }
+}
+
+TelegramBotMessage BotController::uploadVideo(const RecordingToUpload &upload)
+{
+    QVariant video;
+
+    if (upload.videoFileId.isEmpty())
+        video = QUrl::fromLocalFile(upload.videoPath);
+    else
+        video = upload.videoFileId;
+
+    QElapsedTimer timer;
+    timer.start();
+
+    TelegramBotMessage response;
+    bot->sendVideo(channelId,
+                   video,
+                   upload.caption,
+                   -1, -1, -1, 0, TelegramBot::DisableNotification, TelegramKeyboardRequest(),
+                   &response);
+
+    qint64 uploadTime = timer.elapsed();
+    double speedMBSec = double(response.video.fileSize / ((double)uploadTime / 1000.0)) / 1000000.0;
+    qNamedDebug() << QString("Finished upload: %1 (RID %2), size = %3 MB, speed = %4 MB/s")
+                         .arg(upload.videoPath).arg(upload.recordingId).arg(response.video.fileSize / 1000000).arg(speedMBSec);
+
+    return response;
+}
+
+TelegramBotMessage BotController::uploadContactSheet(const RecordingToUpload &upload, int videoMessageId)
+{
+    QVariant image;
+
+    if (upload.videoFileId.isEmpty())
+        image = QUrl::fromLocalFile(upload.contactSheetPath);
+    else
+        image = upload.contactSheetFileId;
+
+    QElapsedTimer timer;
+    timer.start();
+
+    TelegramBotMessage response;
+    bot->sendPhoto(channelId,
+                   image,
+                   QString(),
+                   videoMessageId, TelegramBot::DisableNotification, TelegramKeyboardRequest(),
+                   &response);
+    if (response.photo.isEmpty()) {
+        qNamedDebug() << "error: response photo list empty";
+        return response;
+    }
+
+    return response;
+}
+
+void BotController::enqueueUploads(QVector<RecordingToUpload> uploads)
+{
+    for (const RecordingToUpload &upload : uploads) {
+        uploadQueue.append(upload);
+        uploadQueueSizeBytes += upload.sizeBytes;
+    }
+    emit uploadsEnqueued(uploadQueueSizeBytes);
+    emit uploadQueueChanged(uploadQueue.size());
+}
+
+void BotController::startUploading()
+{
+    if (paused)
+        return;
+    while (!paused && !uploadQueue.isEmpty()) {
+        RecordingToUpload recordingToUpload = uploadQueue.dequeue();
+        double recordingSizeGB = (double)recordingToUpload.sizeBytes / 1000000000.0;
+        QString sizeString = QString::number(recordingSizeGB, 'f', 2);
+        qNamedDebug() << QString("Starting upload: %1 (%2 GB), in queue = %3")
+                            .arg(recordingToUpload.videoPath).arg(sizeString).arg(uploadQueue.size());
+
+        TelegramBotMessage videoResponse = uploadVideo(recordingToUpload);
+        TelegramBotMessage contactsheetResponse = uploadContactSheet(recordingToUpload, videoResponse.messageId);
+
+        RecordingUploadInfo uploadInfo;
+        uploadInfo.recordingId = recordingToUpload.recordingId;
+        uploadInfo.chatId = videoResponse.chat.id;
+        uploadInfo.video.fileId = videoResponse.video.fileId;
+        uploadInfo.video.messageId = videoResponse.messageId;
+        uploadInfo.video.sizeBytes = videoResponse.video.fileSize;
+        if (!contactsheetResponse.photo.isEmpty())
+            uploadInfo.contactsheet.fileId = contactsheetResponse.photo[0].fileId;
+        uploadInfo.contactsheet.messageId = contactsheetResponse.messageId;
+
+
+        emit recordingUploaded(uploadInfo);
+        emit uploadQueueChanged(uploadQueue.size());
+    }
+    if (paused)
+        qNamedDebug() << "Uploading was paused";
+    else if (uploadQueue.isEmpty())
+        qNamedDebug() << "Uploading stopped, queue empty";
 }

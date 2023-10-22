@@ -2,11 +2,11 @@
 #define TELEGRAMBOTGUI_H
 
 #include <QObject>
+#include "types.h"
 #include "mainwindow.h"
 #include "messagebroker.h"
 #include "botcontroller.h"
 #include "dbmanager.h"
-#include "types.h"
 
 class TelegramBotGUI : public QObject
 {

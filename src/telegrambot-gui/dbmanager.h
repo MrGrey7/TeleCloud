@@ -24,8 +24,12 @@ public:
 private:
     bool openDb(const QString &path);
     void readJsonTest();
-    void syncJsonMetadata();
+    void readAllJsonMetadata();
+    bool writeRecordingToDb(RecordingMetadata &metadata);
     void readMetadata(const QString &metadataJsonPath, RecordingMetadata &metadata);
+    void fillQueueWithRecordings();
+    QString generateCaption(QString modelName, qint64 date);
+    void updateFileStatus();
 
 private:
     QString dbPath;
@@ -34,10 +38,15 @@ private:
     Q_PROPERTY(QString dbPath READ getDbPath WRITE setDbPath NOTIFY dbPathChanged FINAL)
     Q_PROPERTY(QString recordingsJsonPath READ getRecordingsJsonPath WRITE setRecordingsJsonPath NOTIFY recordingsJsonPathChanged FINAL)
 
-signals:
+public slots:
+    void processMessage(GenericMessage message);
+    void writeUploadToDb(RecordingUploadInfo upload);
 
+signals:
     void recordingsJsonPathChanged();
     void dbPathChanged();
+    void readMetadataProgressChanged(int, int);
+    void loadedRecordingsToUpload(QVector<RecordingToUpload> uploads);
 };
 
 #endif // DBMANAGER_H

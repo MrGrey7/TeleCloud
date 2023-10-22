@@ -21,11 +21,30 @@ private slots:
 
     void on_button_upload_clicked();
 
+    void on_button_syncJsons_clicked();
+
+    void on_button_startUpload_clicked();
+
+    void on_button_stopUpload_clicked();
+
+    void on_button_fillQueue_clicked();
+
+    void on_button_updateFileStatus_clicked();
+
 private:
     Ui::MainWindow *ui;
+    qint64 queueSizeBytes = 0;
+    qint64 processedSizeBytes = 0;
 
 signals:
-    void sendGuiCommand(GuiCommand);
+    void sendMessage(GenericMessage);
+
+public slots:
+    void updateMetadataProgress(int value, int total);
+    void updateQueueSize(int size);
+    void updateTotalQueueFileSize(qint64 queueSizeBytes);
+    void updateProcessedFileSize(RecordingUploadInfo upload);
+
 };
 
 #endif // MAINWINDOW_H

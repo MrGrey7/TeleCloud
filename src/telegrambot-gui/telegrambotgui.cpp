@@ -20,6 +20,11 @@ void TelegramBotGUI::loadConfig()
 
 void TelegramBotGUI::setup()
 {
+    qDebug() << "func info";
+    qDebug() << "Function Name: " << Q_FUNC_INFO;
+
+    qDebug() << "stringify";
+    qDebug() << QT_STRINGIFY(MainWindowVM);
     // Main Window
     qDebug() << "Setting up mainWindow";
     MainWindow *mainWindow = new MainWindow();
@@ -34,12 +39,14 @@ void TelegramBotGUI::setup()
     botController.initialize();
     qDebug() << "finished";
 
-    // Message Broker
-    messageBroker.setMainWindow(mainWindow);
-    messageBroker.setBotController(&botController);
-
     // Database Manager
     dbManager.setDbPath(config.sqliteDbPath);
     dbManager.setRecordingsJsonPath(config.recordingsJsonPath);
     dbManager.initialize();
+
+    // Message Broker
+    messageBroker.setMainWindow(mainWindow);
+    messageBroker.setBotController(&botController);
+    messageBroker.setDbManager(&dbManager);
+    messageBroker.connectSignals();
 }

@@ -2,6 +2,7 @@
 #define TYPES_H
 
 #include <QString>
+#include <QVariant>
 
 #define qNamedDebug() qDebug() << Q_FUNC_INFO
 
@@ -26,6 +27,37 @@ struct ModelData {
     QString url;
 };
 
+struct RecordingToUpload {
+    QString videoPath;
+    QString contactSheetPath;
+    QString caption;
+    QString videoFileId;
+    QString contactSheetFileId;
+    qint64  sizeBytes = -1;
+    int     recordingId;
+};
+
+Q_DECLARE_METATYPE(RecordingToUpload)
+
+
+struct UploadedFile {
+    int messageId;
+    QString fileId;
+    qint64 sizeBytes;
+};
+
+Q_DECLARE_METATYPE(UploadedFile)
+
+struct RecordingUploadInfo {
+    int recordingId;
+    int chatId;
+    int messageId;
+    UploadedFile video;
+    UploadedFile contactsheet;
+};
+
+Q_DECLARE_METATYPE(RecordingUploadInfo)
+
 // Recording Metadata Fields to read from .json
 struct RecordingMetadata {
     QString videoPath;
@@ -44,19 +76,35 @@ struct RecordingMetadata {
     QString status;
 };
 
-struct GuiCommand {
+struct GenericMessage {
     enum Type {
+        // commands
         Upload,
-        Download
+        Download,
+        SyncMetadata,
+        FillQueue,
+        UploadStart,
+        UploadStop,
+        UpdateFileStatus,
+
+        // responses
+        SyncedMetadata,
+        FilledQueue,
+        UploadStarted,
+        UploadStopped
     };
 
-    GuiCommand() {}
-    GuiCommand(Type commandType, QString commandParams = "")
-        : type(commandType), params(commandParams) {}
+    GenericMessage() {}
+    GenericMessage(Type messageType, QString messageParams = "")
+        : type(messageType), params(messageParams) {}
     Type type = Upload;
-    QString params;
+    QVariant params;
 };
 
-Q_DECLARE_METATYPE(GuiCommand);
+Q_DECLARE_METATYPE(GenericMessage)
+
+enum UploadTypes {
+    Recording
+};
 
 #endif // TYPES_H

@@ -4,6 +4,7 @@
 #include <QObject>
 #include "mainwindow.h"
 #include "botcontroller.h"
+#include "dbmanager.h"
 #include "types.h"
 
 class MessageBroker : public QObject
@@ -12,25 +13,32 @@ class MessageBroker : public QObject
 public:
     explicit MessageBroker(QObject *parent = 0);
 
+    void connectSignals();
+
     MainWindow *getMainWindow() const;
     void setMainWindow(MainWindow *value);
 
     BotController *getBotController() const;
     void setBotController(BotController *value);
 
+    DbManager *getDbManager() const;
+    void setDbManager(DbManager *newDbManager);
+
 private:
     void connectMainWindow();
     void connectBotController();
+    void connectDbManager();
 
 private:
     MainWindow *mainWindow = nullptr;
     BotController *botController = nullptr;
-
+    DbManager *dbManager = nullptr;
+    
 signals:
-    void mainWindowGuiCommandReceived(GuiCommand);
+    void mainWindowGuiCommandReceived(GenericMessage);
 
 public slots:
-    void guiCommandReceived(GuiCommand command);
+    void processMessage(GenericMessage command);
 };
 
 #endif // EVENTPROCESSOR_H
