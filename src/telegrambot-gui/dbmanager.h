@@ -30,6 +30,7 @@ private:
     void fillQueueWithRecordings();
     QString generateCaption(QString modelName, qint64 date);
     void updateFileStatus();
+    QSet<QString> getAllJsonsFromDb();
 
 private:
     QString dbPath;

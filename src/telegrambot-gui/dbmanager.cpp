@@ -85,8 +85,11 @@ void DbManager::readAllJsonMetadata()
 
     QStringList jsons = directory.entryList(QStringList() << "*.json", QDir::Files);
     int n = jsons.size();
+    QSet<QString> alreadyProcessedJsons = getAllJsonsFromDb();
     for(int i = 0; i < n; i++) {
         QString &filename = jsons[i];
+        if (alreadyProcessedJsons.contains(filename))
+            continue;
         RecordingMetadata metadata;
         readMetadata(QString(R"RX(%1/%2)RX").arg(recordingsJsonPath).arg(filename),
                      metadata);
@@ -318,6 +321,24 @@ void DbManager::updateFileStatus()
         }
 
     }
+}
+
+QSet<QString> DbManager::getAllJsonsFromDb()
+{
+    QSqlQuery q(QSqlDatabase::database(sqlConnectionName));
+    q.prepare("select metadata_path "
+              "from recordings;");
+
+    if (!q.exec()) {
+        qNamedDebug() << "Query failed: " << q.executedQuery();
+        qWarning() << "DB text: " << q.lastError().databaseText();
+        qWarning() << "Driver text: " << q.lastError().driverText();
+    }
+    QSet<QString> result;
+    while (q.next()) {
+        result.insert(q.value(0).toString());
+    }
+    return result;
 }
 
 void DbManager::processMessage(GenericMessage message)
