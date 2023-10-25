@@ -273,8 +273,9 @@ QString DbManager::generateCaption(QString modelName, qint64 date)
     caption += '#' + modelName + ' ';
     if (dt.isValid()) {
         QLocale locale(QLocale("en_US"));
-        caption += '#' + locale.toString(dt, "MMMM") + ' ';
         caption += '#' + dt.date().toString("yyyy") + "y ";
+        caption += '#' + locale.toString(dt, "MMMM") + ' ';
+        caption += dt.date().toString("d") + ", ";
         caption += dt.time().toString();
     }
     return caption;
