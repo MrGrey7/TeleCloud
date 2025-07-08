@@ -7,7 +7,6 @@ LIBS += \
 SUBDIRS += $${LIBS}
 
 MODULES = \
-    main \
     telegrambot-gui \
 
 for( mod, MODULES ) {
