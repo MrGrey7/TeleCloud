@@ -37,8 +37,11 @@ bool DbManager::openDb(const QString &path)
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", sqlConnectionName);
     db.setDatabaseName(dbPath);
 //    db.setUserName(sqlUsername);
-    if (!db.open())
+    if (!db.open()) {
         qDebug() << "DbManager::DbManager(): error: failed to open " << path;
+        return false;
+    }
+    return true;
 //    QStringList tables = db.tables();
 ////    QVector<QSqlRecord *> records;
 //    for (auto table : tables) {
@@ -64,11 +67,6 @@ void DbManager::readJsonTest()
     QJsonObject object = doc.object();
     auto models = object["model"].toObject();
     QStringList keys = object.keys();
-    for (auto &key : object.keys()) {
-
-    }
-
-    int x = 0;
 }
 
 void DbManager::readAllJsonMetadata()
@@ -304,7 +302,6 @@ void DbManager::updateFileStatus()
     int contactSheetExistsColumn = q.record().indexOf("contactsheet_exists");
 
     while (q.next()) {
-        bool needUpdate = false;
         int oldVideoExists = q.value(videoExistsColumn).toInt();
         int oldContactSheetExists = q.value(contactSheetExistsColumn).toInt();
         int videoExists = QFile::exists(q.value(videoPathColumn).toString());
