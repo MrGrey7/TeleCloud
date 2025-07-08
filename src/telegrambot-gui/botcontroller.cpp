@@ -367,6 +367,8 @@ void BotController::startUploading()
     }
     if (paused)
         qNamedDebug() << "Uploading was paused";
-    else if (uploadQueue.isEmpty())
+    else if (uploadQueue.isEmpty()) {
         qNamedDebug() << "Uploading stopped, queue empty";
+        setPaused(true);
+    }
 }
