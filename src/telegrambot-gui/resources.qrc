@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resources/appicon.ico</file>
+        <file>resources/appicon.png</file>
+    </qresource>
+</RCC>

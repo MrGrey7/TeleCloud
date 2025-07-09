@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
 #endif
 
     QApplication app(argc, argv);
+    app.setWindowIcon(QIcon(":/resources/appicon.png"));
 
     // Initializing TelegramBot-GUI
     TelegramBotGUI telegramBotGUI;
