@@ -62,9 +62,10 @@ config/auth.cfg
 
 #Compiled binaries
 bin/
-*.ini
 *.db
 *.telegrambot
 db
 *.telegrambot
 object_script*
+config/config.ini
+config/auth.ini
