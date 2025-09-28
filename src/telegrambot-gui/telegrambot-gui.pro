@@ -7,7 +7,7 @@ include( $$ROOT/app.pri )
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
-TARGET = telegrambot
+TARGET = TeleCloud
 #CONFIG += console
 
 TEMPLATE = app

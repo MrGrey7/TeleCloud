@@ -67,3 +67,4 @@ bin/
 *.telegrambot
 db
 *.telegrambot
+object_script*

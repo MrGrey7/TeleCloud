@@ -29,7 +29,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>TelegramBot</string>
+   <string>TeleCloud</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QTabWidget" name="tabWidget">
