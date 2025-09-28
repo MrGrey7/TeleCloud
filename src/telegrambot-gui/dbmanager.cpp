@@ -264,7 +264,7 @@ void DbManager::fillQueueWithRecordings()
     emit loadedRecordingsToUpload(selectedUploads);
 }
 
-QString DbManager::generateCaption(QString modelName, qint64 date)
+QString DbManager::generateCaption(const QString &modelName, qint64 date)
 {
     QDateTime dt = QDateTime::fromMSecsSinceEpoch(date);
     QString caption;

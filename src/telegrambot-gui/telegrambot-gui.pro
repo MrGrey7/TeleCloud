@@ -39,6 +39,8 @@ INCLUDEPATH += $${INC_PATH}/
 DISTFILES += \
     resources\appicon.rc
 
+RC_FILE = resources\appicon.rc
+
 RESOURCES += \
     resources.qrc
 

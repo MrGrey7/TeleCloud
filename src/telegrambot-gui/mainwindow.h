@@ -43,7 +43,7 @@ public slots:
     void updateMetadataProgress(int value, int total);
     void updateQueueSize(int size);
     void updateTotalQueueFileSize(qint64 queueSizeBytes);
-    void updateProcessedFileSize(RecordingUploadInfo upload);
+    void updateProcessedFileSize(const RecordingUploadInfo &upload);
 
 };
 

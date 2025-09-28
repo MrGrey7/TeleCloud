@@ -250,7 +250,6 @@ void BotController::testUpload()
 void BotController::testDownload()
 {
     TelegramBotFile file = bot->getFile("BAACAgIAAx0EcBfiagADjmU1FWvhF7sCP0AgJpidU3VlN1dgAAK4OAACvvGxSTRWn94s_-2zLwQ", true);
-    int x = 0;
 }
 
 void BotController::processMessage(GenericMessage command)
@@ -327,7 +326,7 @@ TelegramBotMessage BotController::uploadContactSheet(const RecordingToUpload &up
     return response;
 }
 
-void BotController::enqueueUploads(QVector<RecordingToUpload> uploads)
+void BotController::enqueueUploads(const QVector<RecordingToUpload> &uploads)
 {
     for (const RecordingToUpload &upload : uploads) {
         uploadQueue.append(upload);

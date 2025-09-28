@@ -66,7 +66,7 @@ public slots:
     void testDownload();
     void processMessage(GenericMessage command);
     void enqueueVideo(RecordingToUpload upload);
-    void enqueueUploads(QVector<RecordingToUpload> uploads);
+    void enqueueUploads(const QVector<RecordingToUpload> &uploads);
     void startUploading();
 };
 

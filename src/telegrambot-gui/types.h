@@ -51,7 +51,6 @@ Q_DECLARE_METATYPE(UploadedFile)
 struct RecordingUploadInfo {
     int recordingId;
     int chatId;
-    int messageId;
     UploadedFile video;
     UploadedFile contactsheet;
 };

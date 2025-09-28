@@ -51,7 +51,7 @@ void MainWindow::updateTotalQueueFileSize(qint64 queueSizeBytes)
     ui->progressBar_uploadVideos->setMaximum(queueSizeBytes / 1000000); // MB
 }
 
-void MainWindow::updateProcessedFileSize(RecordingUploadInfo upload)
+void MainWindow::updateProcessedFileSize(const RecordingUploadInfo &upload)
 {
     qint64 newTotalUploaded = ui->progressBar_uploadVideos->value();
     newTotalUploaded += upload.video.sizeBytes / 1000000;

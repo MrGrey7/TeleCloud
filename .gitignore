@@ -65,4 +65,4 @@ bin/
 *.ini
 *.db
 *.telegrambot
-*.telegrambot
+db
