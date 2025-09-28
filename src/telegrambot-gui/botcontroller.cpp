@@ -7,6 +7,11 @@ BotController::BotController(QObject *parent) : QObject(parent)
     connect(this, &BotController::pausedChanged, this, &BotController::startUploading);
 }
 
+BotController::~BotController()
+{
+    delete bot;
+}
+
 TelegramBot *BotController::getBot() const
 {
     return bot;

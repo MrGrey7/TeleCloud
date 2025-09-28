@@ -21,6 +21,7 @@ private:
     BotController botController;
     DbManager dbManager;
     Config  config;
+    MainWindow mainWindow;
 
 signals:
 

@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     QString locations = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     qDebug() << locations;
+    ui->tabWidget->setTabEnabled(2, false);
 }
 
 MainWindow::~MainWindow()

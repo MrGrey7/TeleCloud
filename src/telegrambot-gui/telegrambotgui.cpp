@@ -27,8 +27,7 @@ void TelegramBotGUI::setup()
     qDebug() << QT_STRINGIFY(MainWindowVM);
     // Main Window
     qDebug() << "Setting up mainWindow";
-    MainWindow *mainWindow = new MainWindow();
-    mainWindow->show();
+    mainWindow.show();
     qDebug() << "finished";
 
     // Bot Controller
@@ -45,7 +44,7 @@ void TelegramBotGUI::setup()
     dbManager.initialize();
 
     // Message Broker
-    messageBroker.setMainWindow(mainWindow);
+    messageBroker.setMainWindow(&mainWindow);
     messageBroker.setBotController(&botController);
     messageBroker.setDbManager(&dbManager);
     messageBroker.connectSignals();

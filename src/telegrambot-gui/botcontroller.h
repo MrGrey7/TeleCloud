@@ -11,6 +11,7 @@ class BotController : public QObject
     Q_OBJECT
 public:
     explicit BotController(QObject *parent = 0);
+    ~BotController();
 
 
     TelegramBot *getBot() const;
