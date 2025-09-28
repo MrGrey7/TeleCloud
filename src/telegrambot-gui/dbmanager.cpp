@@ -33,12 +33,13 @@ bool DbManager::openDb(const QString &path)
     if (!QFile::exists(dbPath)) {
         // DB file does not exist
         qDebug() << "DbManager::openDb: error: DB file does not exist at " << path;
+        createDatabase(path);
     }
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", sqlConnectionName);
     db.setDatabaseName(dbPath);
 //    db.setUserName(sqlUsername);
     if (!db.open()) {
-        qDebug() << "DbManager::DbManager(): error: failed to open " << path;
+        qDebug() << "DbManager::openDb: error: failed to open " << path;
         return false;
     }
     return true;
@@ -54,6 +55,48 @@ bool DbManager::openDb(const QString &path)
 
 //    }
 
+}
+
+bool DbManager::createDatabase(const QString &dbName)
+{
+    qDebug() << "creatingDb at " << dbName;
+    // Check if the database file already exists
+    if (QFile::exists(dbName)) {
+        qDebug() << "Database already exists.";
+        return false;
+    }
+
+    // Open the database (this will create the file if it doesn't exist)
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", sqlConnectionName);
+    db.setDatabaseName(dbName);
+
+    if (!db.open()) {
+        qDebug() << "Error: Unable to open database.";
+        return false;
+    }
+    QString fullQuery(
+        "CREATE TABLE IF NOT EXISTS models (model_name TEXT PRIMARY KEY ON CONFLICT IGNORE, display_name TEXT, url TEXT, type TEXT);"
+        "CREATE TABLE IF NOT EXISTS recordings (recording_id INTEGER PRIMARY KEY, video_path TEXT, video_exists INTEGER DEFAULT (- 1), contactsheet_path TEXT, contactsheet_exists INTEGER DEFAULT (- 1), metadata_path TEXT, generated_id TEXT UNIQUE ON CONFLICT IGNORE, last_size_update INTEGER, model_name TEXT REFERENCES models (model_name), pinned TEXT, progress INTEGER, selected_resolution INTEGER, single_file TEXT, size_bytes INTEGER, start_date INTEGER, status TEXT, upload_id INTEGER REFERENCES uploads (upload_id) ON DELETE SET NULL);"
+        "CREATE TABLE IF NOT EXISTS uploads (upload_id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id INTEGER, video_message_id INTEGER, video_file_id TEXT, contactsheet_message_id INTEGER, contactsheet_file_id TEXT, date INTEGER, type TEXT);"
+        "CREATE UNIQUE INDEX IF NOT EXISTS Recordings_upload_id_index ON recordings (upload_id COLLATE BINARY);");
+
+    QStringList queryList = fullQuery.split(';', QString::SkipEmptyParts);
+    QSqlQuery q(db);
+    for (auto &queryText : queryList) {
+        QString trimmedQuery = queryText.trimmed();
+        if (!trimmedQuery.isEmpty()) {
+            if (!q.exec(trimmedQuery)) {
+                qWarning() << "Query failed: " << q.executedQuery();
+                qWarning() << "DB text: " << q.lastError().databaseText();
+                qWarning() << "Driver text: " << q.lastError().driverText();
+                return false;
+            } else {
+                qDebug() << "Executed: " << trimmedQuery;
+            }
+        }
+    }
+
+    return true;
 }
 
 void DbManager::readJsonTest()

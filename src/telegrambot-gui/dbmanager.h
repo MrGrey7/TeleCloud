@@ -23,6 +23,7 @@ public:
 
 private:
     bool openDb(const QString &path);
+    bool createDatabase(const QString &dbName);
     void readJsonTest();
     void readAllJsonMetadata();
     bool writeRecordingToDb(RecordingMetadata &metadata);
