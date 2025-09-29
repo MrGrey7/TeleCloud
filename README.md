@@ -63,6 +63,11 @@ The app will automatically create the SQLite database (and tables) if it doesn't
 
 ## 📝 License & Badges
 
-This project is available under the **MIT License**.  
+This project and all submodules are licensed under **GNU General Public License v3.0 (GPL-3.0-or-later)**. See the [LICENSE](LICENSE) file for full terms, including attribution to third-party parts.
 
 ---
+
+## 🛠 Dependencies & Licensing Notice
+
+This project includes **telegrambotlib-qt** (from `lightX2/telegrambotlib-qt`) as a submodule.  
+That submodule is licensed under **GNU GPL v3**.
