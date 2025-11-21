@@ -7,10 +7,10 @@
 #define qNamedDebug() qDebug() << Q_FUNC_INFO
 
 // Config keys
-const QString botApiTokenKey        = "BOT_API_TOKEN";
-const QString channelIdKey          = "CHANNEL_ID";
-const QString recordingsJsonPathKey = "RECORDINGS_JSON_PATH";
-const QString sqliteDbPathKey       = "SQLITE_DB_PATH";
+inline const QString botApiTokenKey        = "BOT_API_TOKEN";
+inline const QString channelIdKey          = "CHANNEL_ID";
+inline const QString recordingsJsonPathKey = "RECORDINGS_JSON_PATH";
+inline const QString sqliteDbPathKey       = "SQLITE_DB_PATH";
 
 // Config fields
 struct Config {
