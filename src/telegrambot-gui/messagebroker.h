@@ -11,7 +11,7 @@ class MessageBroker : public QObject
 {
     Q_OBJECT
 public:
-    explicit MessageBroker(QObject *parent = 0);
+    explicit MessageBroker(QObject *parent = nullptr);
 
     void connectSignals();
 

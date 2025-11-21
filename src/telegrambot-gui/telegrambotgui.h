@@ -12,7 +12,7 @@ class TelegramBotGUI : public QObject
 {
     Q_OBJECT
 public:
-    explicit TelegramBotGUI(QObject *parent = 0);
+    explicit TelegramBotGUI(QObject *parent = nullptr);
     void loadConfig();
     void setup();
 

@@ -10,7 +10,7 @@ class BotController : public QObject
 {
     Q_OBJECT
 public:
-    explicit BotController(QObject *parent = 0);
+    explicit BotController(QObject *parent = nullptr);
     ~BotController();
 
 
