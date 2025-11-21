@@ -1,38 +1,37 @@
-#ifndef BOTCONTROLLER_H
-#define BOTCONTROLLER_H
+#pragma once
 
 #include <QObject>
-#include <telegrambotlib-qt-fork>
 #include <QQueue>
+#include <memory> // for std::unique_ptr
 #include "types.h"
+
+// FIX: Include the library here because we cannot forward declare
+// TelegramBotUpdate if it is a typedef in the library.
+#include <telegrambotlib-qt-fork>
 
 class BotController : public QObject
 {
     Q_OBJECT
-public:
-    explicit BotController(QObject *parent = 0);
-    ~BotController();
+    Q_PROPERTY(QString channelId READ getChannelId WRITE setChannelId RESET resetChannelId NOTIFY channelIdChanged FINAL)
+    Q_PROPERTY(bool paused READ getPaused WRITE setPaused NOTIFY pausedChanged FINAL)
 
+public:
+    explicit BotController(QObject *parent = nullptr);
+    ~BotController() override;
 
     TelegramBot *getBot() const;
-    void setBot(TelegramBot *value);
+    void setBot(std::unique_ptr<TelegramBot> value);
 
     void initialize();
-
     void start();
 
-    void sendMessage(const QString &text, TelegramBotUpdate update);
-
-    void editMessage(const QString &text, TelegramBotUpdate update, TelegramBotMessage *message);
-
+    // FIX: Pass const reference to avoid copying shared pointers unnecessarily
+    void sendMessage(const QString &text, const TelegramBotUpdate &update);
+    void editMessage(const QString &text, const TelegramBotUpdate &update, TelegramBotMessage *message);
     void sendMessageHtml();
-
-    void sendPhotoWeb(const QString &address, const QString &text, TelegramBotUpdate update);
-
-//    void sendAudioLocal()
+    void sendPhotoWeb(const QString &address, const QString &text, const TelegramBotUpdate &update);
 
     TelegramBotMessage uploadVideo(const RecordingToUpload &upload);
-
     TelegramBotMessage uploadContactSheet(const RecordingToUpload &upload, int videoMessageId);
 
     QString getChannelId() const;
@@ -42,33 +41,27 @@ public:
     bool getPaused() const;
     void setPaused(bool newPaused);
 
-private:
-    TelegramBot *bot = nullptr;
-    QString channelId;
-    QQueue<RecordingToUpload> uploadQueue;
-    bool paused = true;
-    qint64 uploadQueueSizeBytes = 0;
-
-    Q_PROPERTY(QString channelId READ getChannelId WRITE setChannelId RESET resetChannelId NOTIFY channelIdChanged FINAL)
-    Q_PROPERTY(bool paused READ getPaused WRITE setPaused NOTIFY pausedChanged FINAL)
+public slots:
+    void testSendMessages(const TelegramBotUpdate &update);
+    void testUpload();
+    void testDownload();
+    void processMessage(const GenericMessage &command);
+    void enqueueVideo(const RecordingToUpload &upload);
+    void enqueueUploads(const QVector<RecordingToUpload> &uploads);
+    void startUploading();
 
 signals:
     void uploadEnqueued();
     void channelIdChanged();
-//    void fileUploaded(QString path, int recordingId, QString fileId, int messageId, UploadTypes type);
     void recordingUploaded(RecordingUploadInfo info);
     void pausedChanged();
     void uploadQueueChanged(int size);
     void uploadsEnqueued(qint64 queueSizeBytes);
 
-public slots:
-    void testSendMessages(TelegramBotUpdate update);
-    void testUpload();
-    void testDownload();
-    void processMessage(GenericMessage command);
-    void enqueueVideo(RecordingToUpload upload);
-    void enqueueUploads(const QVector<RecordingToUpload> &uploads);
-    void startUploading();
+private:
+    std::unique_ptr<TelegramBot> m_bot;
+    QString m_channelId;
+    QQueue<RecordingToUpload> m_uploadQueue;
+    bool m_paused = true;
+    qint64 m_uploadQueueSizeBytes = 0;
 };
-
-#endif // BOTCONTROLLER_H

@@ -1,18 +1,21 @@
-#ifndef TYPES_H
-#define TYPES_H
+#pragma once
 
 #include <QString>
 #include <QVariant>
+#include <QMetaType>
+#include <QDebug>
 
 #define qNamedDebug() qDebug() << Q_FUNC_INFO
 
-// Config keys
-inline const QString botApiTokenKey        = "BOT_API_TOKEN";
-inline const QString channelIdKey          = "CHANNEL_ID";
-inline const QString recordingsJsonPathKey = "RECORDINGS_JSON_PATH";
-inline const QString sqliteDbPathKey       = "SQLITE_DB_PATH";
+// Modern C++: Use constexpr char* for keys.
+// This avoids constructing QString objects at static initialization time.
+namespace ConfigKeys {
+constexpr const char* BotApiToken        = "BOT_API_TOKEN";
+constexpr const char* ChannelId          = "CHANNEL_ID";
+constexpr const char* RecordingsJsonPath = "RECORDINGS_JSON_PATH";
+constexpr const char* SqliteDbPath       = "SQLITE_DB_PATH";
+}
 
-// Config fields
 struct Config {
     QString botToken;
     QString channelId;
@@ -20,7 +23,6 @@ struct Config {
     QString sqliteDbPath;
 };
 
-// Model Data
 struct ModelData {
     QString name;
     QString type;
@@ -34,30 +36,25 @@ struct RecordingToUpload {
     QString videoFileId;
     QString contactSheetFileId;
     qint64  sizeBytes = -1;
-    int     recordingId;
+    int     recordingId = -1;
 };
-
 Q_DECLARE_METATYPE(RecordingToUpload)
 
-
 struct UploadedFile {
-    int messageId;
+    int messageId = -1;
     QString fileId;
-    qint64 sizeBytes;
+    qint64 sizeBytes = -1;
 };
-
 Q_DECLARE_METATYPE(UploadedFile)
 
 struct RecordingUploadInfo {
-    int recordingId;
-    int chatId;
+    int recordingId = -1;
+    qint64 chatId = -1;
     UploadedFile video;
     UploadedFile contactsheet;
 };
-
 Q_DECLARE_METATYPE(RecordingUploadInfo)
 
-// Recording Metadata Fields to read from .json
 struct RecordingMetadata {
     QString videoPath;
     QString contactSheetPath;
@@ -66,10 +63,10 @@ struct RecordingMetadata {
     qint64  lastSizeUpdate = -1;
     ModelData modelData;
     qint64  modelId = -1;
-    qint64  isPinned = -1;
-    qint64  progress = -1;
-    qint64  selectedResolution = -1;
-    qint64  isSingleFile = -1;
+    bool    isPinned = false;
+    int     progress = -1;
+    int     selectedResolution = -1;
+    bool    isSingleFile = false;
     qint64  sizeBytes = -1;
     qint64  startDate = -1;
     QString status;
@@ -93,17 +90,15 @@ struct GenericMessage {
         UploadStopped
     };
 
-    GenericMessage() {}
-    GenericMessage(Type messageType, QString messageParams = "")
+    GenericMessage() = default;
+    GenericMessage(Type messageType, const QString &messageParams = "")
         : type(messageType), params(messageParams) {}
+
     Type type = Upload;
     QVariant params;
 };
-
 Q_DECLARE_METATYPE(GenericMessage)
 
-enum UploadTypes {
+enum class UploadType {
     Recording
 };
-
-#endif // TYPES_H

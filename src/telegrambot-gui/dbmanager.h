@@ -1,17 +1,20 @@
-#ifndef DBMANAGER_H
-#define DBMANAGER_H
+#pragma once
 
 #include <QObject>
 #include <QSqlDatabase>
-
-#include <types.h>
+#include <QSet>
+#include <QVector>
+#include "types.h"
 
 class DbManager : public QObject
 {
     Q_OBJECT
+    // Properties are excellent for QML, but if only C++, getters/setters are enough. Keeping them is fine.
+    Q_PROPERTY(QString dbPath READ getDbPath WRITE setDbPath NOTIFY dbPathChanged FINAL)
+    Q_PROPERTY(QString recordingsJsonPath READ getRecordingsJsonPath WRITE setRecordingsJsonPath NOTIFY recordingsJsonPathChanged FINAL)
+
 public:
     explicit DbManager(QObject *parent = nullptr);
-
 
     QString getRecordingsJsonPath() const;
     void setRecordingsJsonPath(const QString &newRecordingsJsonPath);
@@ -21,34 +24,28 @@ public:
 
     void initialize();
 
+public slots:
+    void processMessage(const GenericMessage &message); // const ref
+    void writeUploadToDb(const RecordingUploadInfo &upload); // const ref
+
+signals:
+    void recordingsJsonPathChanged();
+    void dbPathChanged();
+    void readMetadataProgressChanged(int current, int total);
+    void loadedRecordingsToUpload(QVector<RecordingToUpload> uploads);
+
 private:
     bool openDb(const QString &path);
     bool createDatabase(const QString &dbName);
     void readJsonTest();
     void readAllJsonMetadata();
-    bool writeRecordingToDb(RecordingMetadata &metadata);
+    bool writeRecordingToDb(const RecordingMetadata &metadata);
     void readMetadata(const QString &metadataJsonPath, RecordingMetadata &metadata);
     void fillQueueWithRecordings();
     QString generateCaption(const QString &modelName, qint64 date);
     void updateFileStatus();
     QSet<QString> getAllJsonsFromDb();
 
-private:
-    QString dbPath;
-    QString recordingsJsonPath;
-
-    Q_PROPERTY(QString dbPath READ getDbPath WRITE setDbPath NOTIFY dbPathChanged FINAL)
-    Q_PROPERTY(QString recordingsJsonPath READ getRecordingsJsonPath WRITE setRecordingsJsonPath NOTIFY recordingsJsonPathChanged FINAL)
-
-public slots:
-    void processMessage(GenericMessage message);
-    void writeUploadToDb(RecordingUploadInfo upload);
-
-signals:
-    void recordingsJsonPathChanged();
-    void dbPathChanged();
-    void readMetadataProgressChanged(int, int);
-    void loadedRecordingsToUpload(QVector<RecordingToUpload> uploads);
+    QString m_dbPath; // Standard member prefix "m_" helps distinguish local vars from members
+    QString m_recordingsJsonPath;
 };
-
-#endif // DBMANAGER_H

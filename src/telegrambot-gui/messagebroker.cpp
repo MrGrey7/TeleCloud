@@ -1,77 +1,96 @@
 #include "messagebroker.h"
-//#include "iostream"
-#include <QDebug>
+#include "mainwindow.h"
+#include "botcontroller.h"
+#include "dbmanager.h"
 
+#include <QDebug>
 
 MessageBroker::MessageBroker(QObject *parent) : QObject(parent)
 {
-
 }
 
 void MessageBroker::connectSignals()
 {
+    // We can only connect if all components are set
+    if (!m_mainWindow || !m_botController || !m_dbManager) {
+        qWarning() << "MessageBroker: Cannot connect signals, one or more components are missing.";
+        return;
+    }
+
     connectMainWindow();
     connectBotController();
     connectDbManager();
 }
 
-MainWindow *MessageBroker::getMainWindow() const
-{
-    return mainWindow;
-}
-
-void MessageBroker::setMainWindow(MainWindow *value)
-{
-    if (mainWindow && mainWindow != value)
-        mainWindow->disconnect(this);
-    mainWindow = value;
-}
-
 void MessageBroker::connectMainWindow()
 {
-    connect(mainWindow, &MainWindow::sendMessage, this, &MessageBroker::processMessage);
-    connect(mainWindow, &MainWindow::sendMessage, botController, &BotController::processMessage);
-    connect(mainWindow, &MainWindow::sendMessage, dbManager, &DbManager::processMessage);
+    // GUI -> Broker
+    connect(m_mainWindow, &MainWindow::sendMessage, this, &MessageBroker::processMessage);
+
+    // GUI -> Bot
+    connect(m_mainWindow, &MainWindow::sendMessage, m_botController, &BotController::processMessage);
+
+    // GUI -> DB
+    connect(m_mainWindow, &MainWindow::sendMessage, m_dbManager, &DbManager::processMessage);
 }
 
 void MessageBroker::connectBotController()
 {
-    connect(botController, &BotController::recordingUploaded, dbManager, &DbManager::writeUploadToDb);
-    connect(botController, &BotController::recordingUploaded, mainWindow, &MainWindow::updateProcessedFileSize);
-    connect(botController, &BotController::uploadQueueChanged, mainWindow, &MainWindow::updateQueueSize);
-    connect(botController, &BotController::uploadsEnqueued, mainWindow, &MainWindow::updateTotalQueueFileSize);
+    // Bot -> DB
+    connect(m_botController, &BotController::recordingUploaded, m_dbManager, &DbManager::writeUploadToDb);
+
+    // Bot -> GUI
+    connect(m_botController, &BotController::recordingUploaded, m_mainWindow, &MainWindow::updateProcessedFileSize);
+    connect(m_botController, &BotController::uploadQueueChanged, m_mainWindow, &MainWindow::updateQueueSize);
+    connect(m_botController, &BotController::uploadsEnqueued, m_mainWindow, &MainWindow::updateTotalQueueFileSize);
 }
 
 void MessageBroker::connectDbManager()
 {
-    connect(dbManager, &DbManager::readMetadataProgressChanged, mainWindow, &MainWindow::updateMetadataProgress);
-    connect(dbManager, &DbManager::loadedRecordingsToUpload, botController, &BotController::enqueueUploads);
+    // DB -> GUI
+    connect(m_dbManager, &DbManager::readMetadataProgressChanged, m_mainWindow, &MainWindow::updateMetadataProgress);
+
+    // DB -> Bot
+    connect(m_dbManager, &DbManager::loadedRecordingsToUpload, m_botController, &BotController::enqueueUploads);
 }
 
-DbManager *MessageBroker::getDbManager() const
+void MessageBroker::processMessage(const GenericMessage &command)
 {
-    return dbManager;
-}
-
-void MessageBroker::setDbManager(DbManager *newDbManager)
-{
-    if (dbManager == newDbManager)
-        return;
-    dbManager = newDbManager;
-}
-
-void MessageBroker::processMessage(GenericMessage command)
-{
-    qNamedDebug() << "received" << command.type;
+    qNamedDebug() << "received type:" << command.type;
     emit mainWindowGuiCommandReceived(command);
+}
+
+// Getters and Setters
+
+MainWindow *MessageBroker::getMainWindow() const
+{
+    return m_mainWindow;
+}
+
+void MessageBroker::setMainWindow(MainWindow *value)
+{
+    if (m_mainWindow && m_mainWindow != value) {
+        m_mainWindow->disconnect(this);
+    }
+    m_mainWindow = value;
 }
 
 BotController *MessageBroker::getBotController() const
 {
-    return botController;
+    return m_botController;
 }
 
 void MessageBroker::setBotController(BotController *value)
 {
-    botController = value;
+    m_botController = value;
+}
+
+DbManager *MessageBroker::getDbManager() const
+{
+    return m_dbManager;
+}
+
+void MessageBroker::setDbManager(DbManager *newDbManager)
+{
+    m_dbManager = newDbManager;
 }

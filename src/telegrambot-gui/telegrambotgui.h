@@ -1,5 +1,4 @@
-#ifndef TELEGRAMBOTGUI_H
-#define TELEGRAMBOTGUI_H
+#pragma once
 
 #include <QObject>
 #include "types.h"
@@ -12,20 +11,22 @@ class TelegramBotGUI : public QObject
 {
     Q_OBJECT
 public:
-    explicit TelegramBotGUI(QObject *parent = 0);
+    explicit TelegramBotGUI(QObject *parent = nullptr);
+
     void loadConfig();
     void setup();
 
+    // FIX: Declare the missing method
+    void showWindow();
+
 private:
-    MessageBroker messageBroker;
-    BotController botController;
-    DbManager dbManager;
-    Config  config;
-    MainWindow mainWindow;
+    // FIX: Define the members that were missing in the scope
+    Config m_config;
 
-signals:
-
-public slots:
+    // Order implies destruction order.
+    // MainWindow usually should be destroyed after Controller/Db to prevent signal issues during shutdown.
+    DbManager     m_dbManager;
+    BotController m_botController;
+    MainWindow    m_mainWindow;
+    MessageBroker m_messageBroker;
 };
-
-#endif // TELEGRAMBOTGUI_H

@@ -1,30 +1,22 @@
 #include <QApplication>
-#include <QDir>
-#include <QFile>
-
-#include <QTextCodec>
 #include <QLocale>
-#include <QDebug>
-
-#include <telegrambot-gui>
+#include <QIcon>
+#include "telegrambotgui.h"
 
 int main(int argc, char *argv[])
 {
-    qputenv( "LC_NUMERIC", "C" );
-    QLocale::setDefault( QLocale::C );
-
-#if QT_VERSION < QT_VERSION_CHECK(5,0,0)
-    QTextCodec::setCodecForCStrings( QTextCodec::codecForName("utf-8") );
-    QTextCodec::setCodecForTr( QTextCodec::codecForName("utf-8"));
-#endif
+    // Modern Qt (6.x) handles HighDPI automatically, but good to be explicit in 5.x
+    // QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QApplication app(argc, argv);
+
+    // Qt6 enforces UTF-8, no need for QTextCodec
+    QLocale::setDefault(QLocale::C);
+
     app.setWindowIcon(QIcon(":/resources/appicon.png"));
 
-    // Initializing TelegramBot-GUI
     TelegramBotGUI telegramBotGUI;
-
-
+    telegramBotGUI.showWindow(); // Explicitly showing window via the coordinator
 
     return app.exec();
 }
