@@ -1,17 +1,19 @@
-# Gather configuration files (INI, XML, TYPES, CFG)
-# GLOB_RECURSE finds files in subfolders if any, GLOB is strictly current folder
+# Gather configuration files
 file(GLOB CONFIG_FILES
-    "${CMAKE_CURRENT_SOURCE_DIR}/*.ini"   # Critical: auth.ini (Secrets)
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.ini"
     "${CMAKE_CURRENT_SOURCE_DIR}/*.xml"
     "${CMAKE_CURRENT_SOURCE_DIR}/*.types"
     "${CMAKE_CURRENT_SOURCE_DIR}/*.cfg"
 )
 
 # Create a target that runs "cmake -E copy_if_different"
-# This ensures that if you change auth.ini, it updates in the build folder
 add_custom_target(DeployConfigs ALL
+    # FIX: Create the directory first!
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    
+    # Then copy
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CONFIG_FILES} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-    COMMENT "Deploying configuration (auth.ini, config.ini) to bin..."
+    COMMENT "Deploying configuration to bin..."
     VERBATIM
 )
 
