@@ -41,9 +41,12 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/db/telecloud.db")
          DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 endif()
 
-# Optional: Tests
-option(BUILD_TESTS "Build tests" OFF)
+# Enable CTest Integration
+enable_testing()
+
+# Option to toggle tests on/off (Default ON now that we have them)
+option(BUILD_TESTS "Build unit tests" ON)
+
 if(BUILD_TESTS)
-    enable_testing()
     add_subdirectory(tests)
 endif()

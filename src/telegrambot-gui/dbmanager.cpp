@@ -28,7 +28,14 @@ bool DbManager::openDb(const QString &path)
         if(!createDatabase(path)) return false;
     }
 
-    QSqlDatabase db = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), ConnectionName);
+    QSqlDatabase db;
+    if (QSqlDatabase::contains(ConnectionName)) {
+        // Reuse existing connection
+        db = QSqlDatabase::database(ConnectionName);
+    } else {
+        // Create new connection
+        db = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), ConnectionName);
+    }
     db.setDatabaseName(path);
 
     if (!db.open()) {
