@@ -69,3 +69,31 @@ db
 object_script*
 config/config.ini
 config/auth.ini
+
+# CMake artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+build/
+*.ninja
+.cmake/
+
+# Old .pro/.pri files
+*.old
+
+# Qt Creator
+CMakeLists.txt.user
+*.pro.user
+
+# IDE
+.vscode/
+.idea/
+*.pro.user*
+
+# Local Secrets (Critical!)
+auth.ini
+config.ini
+
+# Powershell scripts
+*.ps1
