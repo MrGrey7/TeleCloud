@@ -1,0 +1,104 @@
+name: TeleCloud CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            qt_ver: '5.15.2'
+            qt_arch: 'win64_mingw81'
+            tools: 'tools_mingw81'
+            # The folder name inside Qt/5.15.2/
+            qt_dir_name: 'mingw81_64' 
+          - os: ubuntu-22.04
+            qt_ver: '5.15.2'
+            qt_arch: 'gcc_64'
+            tools: ''
+            qt_dir_name: 'gcc_64'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Clean Path (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          # Remove the system MinGW that conflicts with Qt's MinGW
+          Remove-Item -Path "C:\mingw64" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "C:\Strawberry" -Recurse -Force -ErrorAction SilentlyContinue
+        shell: pwsh
+
+      # FIX 2: Install OpenGL libraries required for Qt on Linux
+      - name: Install System Dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ matrix.qt_ver }}
+          arch: ${{ matrix.qt_arch }}
+          # Use the tools defined in the matrix (MinGW for Win, Empty for Linux)
+          tools: ${{ matrix.tools }}
+          cache: true
+
+        # Explicitly find MinGW and add it to PATH so CMake can find 'g++'
+      - name: Register MinGW Path (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          # FIX: Filter for "mingw*64*" to ensure we pick the 64-bit compiler
+          # instead of the 32-bit one (which often sorts first alphabetically).
+          $toolsDir = Get-ChildItem -Path "${{ runner.workspace }}/Qt/Tools" -Filter "mingw*64*" -Directory | Select-Object -First 1
+          
+          if ($toolsDir) {
+            $binDir = Join-Path $toolsDir.FullName "bin"
+            echo "Found MinGW at: $binDir"
+            echo "$binDir" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8
+          } else {
+            Write-Error "Could not find 64-bit MinGW directory in Qt/Tools"
+          }
+        shell: pwsh
+
+      - name: Setup Ninja
+        uses: turtlesec-no/get-ninja@main
+
+      - name: Create Dummy Secrets (CI Only)
+        run: |
+          echo "[Auth]" > config/auth.ini
+          echo "BOT_API_TOKEN=dummy_token" >> config/auth.ini
+          echo "CHANNEL_ID=dummy_channel" >> config/auth.ini
+        shell: bash
+
+      - name: Configure CMake
+        # FIX 3: Force CMake to use the compiler added to PATH by install-qt-action
+        # This prevents it from picking up Strawberry Perl's C:/mingw64/bin/c++.exe
+        # FIX 4: Explicitly point to gcc/g++ to avoid picking up Clang/LLVM on Windows runners
+        run: >
+          cmake -B build -S . -G "Ninja" 
+          -DCMAKE_BUILD_TYPE=Release 
+          -DBUILD_TESTS=ON 
+          -DCMAKE_C_COMPILER=gcc 
+          -DCMAKE_CXX_COMPILER=g++
+          -DCMAKE_PREFIX_PATH="${{ runner.workspace }}/Qt/${{ matrix.qt_ver }}/${{ matrix.qt_dir_name }}"
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Run Tests
+        working-directory: build
+        # On Windows, we need to ensure Qt DLLs are in PATH for ctest
+        run: ctest -C Release --output-on-failure
+        env:
+          QT_PLUGIN_PATH: ${{ env.QT_PLUGIN_PATH }}

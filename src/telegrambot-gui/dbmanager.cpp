@@ -62,8 +62,12 @@ bool DbManager::createDatabase(const QString &dbName)
         CREATE UNIQUE INDEX IF NOT EXISTS Recordings_upload_id_index ON recordings (upload_id COLLATE BINARY);
     )";
 
-    // FIX: Use QString::SkipEmptyParts for Qt 5.12 compatibility
-    QStringList queryList = fullQuery.split(';', QString::SkipEmptyParts);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+    const auto splitBehavior = Qt::SkipEmptyParts;
+#else
+    const auto splitBehavior = QString::SkipEmptyParts;
+#endif
+    QStringList queryList = fullQuery.split(';', splitBehavior);
     QSqlQuery q(db);
 
     for (const auto &queryText : queryList) {
