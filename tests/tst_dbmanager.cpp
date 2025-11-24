@@ -55,21 +55,21 @@ private slots:
         // Verify tables were created
         QStringList tables = db.tables();
         QVERIFY(tables.contains("recordings"));
-        QVERIFY(tables.contains("models"));
+        QVERIFY(tables.contains("channels"));
         QVERIFY(tables.contains("uploads"));
     }
 
     // TEST 2: Verify SQL Injection Protection
     // This tests the specific fix you made with bindValue
-    void testInsertModelSanitization() {
+    void testInsertChannelSanitization() {
         RecordingMetadata metadata;
         
         // ATTACK VECTOR: Attempt to inject SQL to delete the table
         // If you were using string concatenation, this would execute.
         // With bindValue, it should just be treated as a weird name.
-        metadata.modelData.name = "TestModel'); DROP TABLE recordings; --"; 
-        metadata.modelData.url = "http://example.com";
-        metadata.modelData.type = "Test";
+        metadata.channelInfo.name = "TestChannel'); DROP TABLE recordings; --";
+        metadata.channelInfo.url = "http://example.com";
+        metadata.channelInfo.type = "Test";
 
         // We need to use the private/protected method. 
         // Since this is a unit test, we can use the QObject::metaObject invoke 

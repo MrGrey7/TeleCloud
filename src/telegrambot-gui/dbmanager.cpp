@@ -56,8 +56,8 @@ bool DbManager::createDatabase(const QString &dbName)
     }
 
     QString fullQuery = R"(
-        CREATE TABLE IF NOT EXISTS models (model_name TEXT PRIMARY KEY ON CONFLICT IGNORE, display_name TEXT, url TEXT, type TEXT);
-        CREATE TABLE IF NOT EXISTS recordings (recording_id INTEGER PRIMARY KEY, video_path TEXT, video_exists INTEGER DEFAULT (- 1), contactsheet_path TEXT, contactsheet_exists INTEGER DEFAULT (- 1), metadata_path TEXT, generated_id TEXT UNIQUE ON CONFLICT IGNORE, last_size_update INTEGER, model_name TEXT REFERENCES models (model_name), pinned TEXT, progress INTEGER, selected_resolution INTEGER, single_file TEXT, size_bytes INTEGER, start_date INTEGER, status TEXT, upload_id INTEGER REFERENCES uploads (upload_id) ON DELETE SET NULL);
+        CREATE TABLE IF NOT EXISTS channels (channel_name TEXT PRIMARY KEY ON CONFLICT IGNORE, display_name TEXT, url TEXT, type TEXT);
+        CREATE TABLE IF NOT EXISTS recordings (recording_id INTEGER PRIMARY KEY, video_path TEXT, video_exists INTEGER DEFAULT (- 1), contactsheet_path TEXT, contactsheet_exists INTEGER DEFAULT (- 1), metadata_path TEXT, generated_id TEXT UNIQUE ON CONFLICT IGNORE, last_size_update INTEGER, channel_name TEXT REFERENCES channels (channel_name), pinned TEXT, progress INTEGER, selected_resolution INTEGER, single_file TEXT, size_bytes INTEGER, start_date INTEGER, status TEXT, upload_id INTEGER REFERENCES uploads (upload_id) ON DELETE SET NULL);
         CREATE TABLE IF NOT EXISTS uploads (upload_id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id INTEGER, video_message_id INTEGER, video_file_id TEXT, contactsheet_message_id INTEGER, contactsheet_file_id TEXT, date INTEGER, type TEXT);
         CREATE UNIQUE INDEX IF NOT EXISTS Recordings_upload_id_index ON recordings (upload_id COLLATE BINARY);
     )";
@@ -120,20 +120,20 @@ bool DbManager::writeRecordingToDb(const RecordingMetadata &metadata)
     QSqlDatabase db = QSqlDatabase::database(ConnectionName);
     QSqlQuery q(db);
 
-    if (!metadata.modelData.name.isEmpty()) {
-        q.prepare(QStringLiteral("INSERT OR IGNORE INTO models (model_name, url, type) VALUES (?, ?, ?)"));
-        q.addBindValue(metadata.modelData.name);
-        q.addBindValue(metadata.modelData.url);
-        q.addBindValue(metadata.modelData.type);
-        if (!q.exec()) qWarning() << "Model insert error:" << q.lastError().text();
+    if (!metadata.channelInfo.name.isEmpty()) {
+        q.prepare(QStringLiteral("INSERT OR IGNORE INTO channels (channel_name, url, type) VALUES (?, ?, ?)"));
+        q.addBindValue(metadata.channelInfo.name);
+        q.addBindValue(metadata.channelInfo.url);
+        q.addBindValue(metadata.channelInfo.type);
+        if (!q.exec()) qWarning() << "channel insert error:" << q.lastError().text();
     }
 
     q.prepare(QStringLiteral(
         "INSERT OR IGNORE INTO recordings "
         "(video_path, contactsheet_path, metadata_path, generated_id, last_size_update, "
-        "model_name, pinned, progress, selected_resolution, single_file, size_bytes, start_date, status) "
+        "channel_name, pinned, progress, selected_resolution, single_file, size_bytes, start_date, status) "
         "VALUES "
-        "(:vp, :cp, :mp, :gid, :lsu, :mn, :pin, :prog, :res, :sf, :sb, :sd, :stat)"
+        "(:vp, :cp, :mp, :gid, :lsu, :cn, :pin, :prog, :res, :sf, :sb, :sd, :stat)"
         ));
 
     q.bindValue(QStringLiteral(":vp"), metadata.videoPath);
@@ -141,7 +141,7 @@ bool DbManager::writeRecordingToDb(const RecordingMetadata &metadata)
     q.bindValue(QStringLiteral(":mp"), metadata.metadataPath);
     q.bindValue(QStringLiteral(":gid"), metadata.generatedId);
     q.bindValue(QStringLiteral(":lsu"), metadata.lastSizeUpdate);
-    q.bindValue(QStringLiteral(":mn"), metadata.modelData.name);
+    q.bindValue(QStringLiteral(":cn"), metadata.channelInfo.name);
     q.bindValue(QStringLiteral(":pin"), metadata.isPinned);
     q.bindValue(QStringLiteral(":prog"), metadata.progress);
     q.bindValue(QStringLiteral(":res"), metadata.selectedResolution);
@@ -170,12 +170,18 @@ void DbManager::readMetadata(const QString &path, RecordingMetadata &metadata)
     metadata.generatedId = json[QStringLiteral("id")].toString();
     metadata.lastSizeUpdate = json[QStringLiteral("lastSizeUpdate")].toVariant().toLongLong();
 
-    if (json.contains(QStringLiteral("model"))) {
-        QJsonObject model = json[QStringLiteral("model")].toObject();
-        metadata.modelData.name = model[QStringLiteral("name")].toString();
-        metadata.modelData.url  = model[QStringLiteral("url")].toString();
-        metadata.modelData.type = model[QStringLiteral("type")].toString();
+    QJsonObject sourceObj;
+
+    if (json.contains(QStringLiteral("channel"))) {
+        sourceObj = json[QStringLiteral("channel")].toObject();
     }
+    else if (json.contains(QStringLiteral("model"))) {
+        sourceObj = json[QStringLiteral("model")].toObject();
+    }
+
+    metadata.channelInfo.name = sourceObj[QStringLiteral("name")].toString();
+    metadata.channelInfo.url  = sourceObj[QStringLiteral("url")].toString();
+    metadata.channelInfo.type = sourceObj[QStringLiteral("type")].toString();
 
     metadata.isPinned = json[QStringLiteral("pinned")].toBool();
     metadata.progress = json[QStringLiteral("progress")].toInt();
@@ -201,7 +207,7 @@ void DbManager::fillQueueWithRecordings()
     QSqlQuery q(db);
 
     q.prepare(QStringLiteral(
-        "SELECT recording_id, video_path, contactsheet_path, model_name, size_bytes, start_date "
+        "SELECT recording_id, video_path, contactsheet_path, channel_name, size_bytes, start_date "
         "FROM recordings "
         "WHERE upload_id IS NULL AND status = 'FINISHED' AND video_exists != 0 "
         "AND size_bytes > 20000000 AND size_bytes < 2000000000"
@@ -216,7 +222,7 @@ void DbManager::fillQueueWithRecordings()
     const int idxId = q.record().indexOf("recording_id");
     const int idxPath = q.record().indexOf("video_path");
     const int idxSheet = q.record().indexOf("contactsheet_path");
-    const int idxModel = q.record().indexOf("model_name");
+    const int idxchannel = q.record().indexOf("channel_name");
     const int idxSize = q.record().indexOf("size_bytes");
     const int idxDate = q.record().indexOf("start_date");
 
@@ -226,17 +232,17 @@ void DbManager::fillQueueWithRecordings()
         upload.videoPath = q.value(idxPath).toString();
         upload.contactSheetPath = q.value(idxSheet).toString();
         upload.sizeBytes = q.value(idxSize).toLongLong();
-        upload.caption = generateCaption(q.value(idxModel).toString(), q.value(idxDate).toLongLong());
+        upload.caption = generateCaption(q.value(idxchannel).toString(), q.value(idxDate).toLongLong());
         selectedUploads.append(upload);
     }
 
     emit loadedRecordingsToUpload(selectedUploads);
 }
 
-QString DbManager::generateCaption(const QString &modelName, qint64 date)
+QString DbManager::generateCaption(const QString &channelName, qint64 date)
 {
     QDateTime dt = QDateTime::fromMSecsSinceEpoch(date);
-    QString caption = QStringLiteral("#") + modelName + ' ';
+    QString caption = QStringLiteral("#") + channelName + ' ';
 
     if (dt.isValid()) {
         QLocale locale(QLocale::English);

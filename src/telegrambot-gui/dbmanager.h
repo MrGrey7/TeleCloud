@@ -42,7 +42,7 @@ private:
     bool writeRecordingToDb(const RecordingMetadata &metadata);
     void readMetadata(const QString &metadataJsonPath, RecordingMetadata &metadata);
     void fillQueueWithRecordings();
-    QString generateCaption(const QString &modelName, qint64 date);
+    QString generateCaption(const QString &channelName, qint64 date);
     void updateFileStatus();
     QSet<QString> getAllJsonsFromDb();
 

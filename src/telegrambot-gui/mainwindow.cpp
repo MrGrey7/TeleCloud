@@ -6,17 +6,18 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(std::make_unique<Ui::MainWindow>()) // Modern smart pointer usage
+    ui(std::make_unique<Ui::MainWindow>())
 {
     ui->setupUi(this);
 
+#ifndef QT_NO_DEBUG
     // Good for debugging
     qDebug() << "Data location:" << QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-
+#endif
     ui->tabWidget->setTabEnabled(2, false);
 }
 
-MainWindow::~MainWindow() = default; // unique_ptr handles cleanup
+MainWindow::~MainWindow() = default; //
 
 // UI Slots
 void MainWindow::on_button_download_clicked() {

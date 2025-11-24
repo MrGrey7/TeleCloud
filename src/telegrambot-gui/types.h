@@ -23,7 +23,7 @@ struct Config {
     QString sqliteDbPath;
 };
 
-struct ModelData {
+struct ChannelInfo {
     QString name;
     QString type;
     QString url;
@@ -61,8 +61,8 @@ struct RecordingMetadata {
     QString metadataPath;
     QString generatedId;
     qint64  lastSizeUpdate = -1;
-    ModelData modelData;
-    qint64  modelId = -1;
+    ChannelInfo channelInfo;
+    qint64  channelId = -1;
     bool    isPinned = false;
     int     progress = -1;
     int     selectedResolution = -1;
