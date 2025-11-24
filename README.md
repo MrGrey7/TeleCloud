@@ -3,7 +3,7 @@
 ![Toolkit: QT](https://img.shields.io/badge/Toolkit-QT-informational?color=41CD52&logo=qt&logoColor=white)  
 ![Language: C++ / QT](https://img.shields.io/badge/language-C%2B%2B%20%2F%20QT-orange)  
 
-TeleCloud is a Qt/C++ app that uses a Telegram bot + channel to store unlimited stream recordings in Telegram.  
+TeleCloud is a Qt/C++ app that uses Telegram bot API to store unlimited stream recordings in Telegram.  
 It works in tandem with [ctbrec](https://github.com/0xboobface/ctbrec) and a local [tdlight-telegram-bot-api](https://github.com/tdlight-team/tdlight-telegram-bot-api).
 
 ---
