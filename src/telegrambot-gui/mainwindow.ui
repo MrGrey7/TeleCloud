@@ -163,7 +163,7 @@
     </widget>
     <widget class="QWidget" name="tab_fix">
      <attribute name="title">
-      <string>Database Fix</string>
+      <string>Database</string>
      </attribute>
      <widget class="QPushButton" name="button_updateFileStatus">
       <property name="geometry">
