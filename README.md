@@ -3,28 +3,54 @@
 ![Toolkit: QT](https://img.shields.io/badge/Toolkit-QT-informational?color=41CD52&logo=qt&logoColor=white)  
 ![Language: C++ / QT](https://img.shields.io/badge/language-C%2B%2B%20%2F%20QT-orange)  
 
-TeleCloud is a Qt/C++ app that uses Telegram bot API to store unlimited stream recordings in Telegram.  
-It works in tandem with [ctbrec](https://github.com/0xboobface/ctbrec) and a local [tdlight-telegram-bot-api](https://github.com/tdlight-team/tdlight-telegram-bot-api).
+TeleCloud is a high-performance C++/Qt client that transforms a Telegram Channel into unlimited distributed cloud storage for video assets. It supports metadata ingestion, automated queuing, and visual indexing.
+
+It allows users to archive large video libraries (e.g., security feeds, stream VODs) by mapping local metadata to remote Telegram file IDs, effectively using the messenger as a NoSQL Object Store.
 
 ---
 
 ## 📸 Screenshot
 
-<img width="323" height="166" alt="image" src="https://github.com/user-attachments/assets/7eadae61-089b-4821-9d06-82e7b1ba4e96" />
+<img width="323" height="166" alt="TeleCloud Interface" src="https://github.com/user-attachments/assets/7eadae61-089b-4821-9d06-82e7b1ba4e96" />
+
+---
+
+## 🚀 Key Features
+
+*   **Metadata-Driven Ingestion:** Parses standardized JSON sidecar files to organize content by "Channel" (Source) and Date.
+*   **Visual Indexing (Contact Sheets):** Automatically detects associated image files (contact sheets/previews) in the metadata. These are uploaded as threaded replies to the video message, allowing users to scan content content visually without downloading the full video.
+*   **State Tracking:** Maintains a local SQLite database to track upload progress, file IDs, and message links.
+*   **Resiliency:** Handles network interruptions and API limits via the local Telegram Bot API server.
 
 ---
 
 ## 📦 Build Requirements
 
-- Qt **5.12+**  
+- Qt **5.12+**
 - C++17 compiler  
+- CMake
 
-## 🔧 Runtime / Use Requirements
+## 🔧 Runtime Requirements
+ 
+1. Local Telegram API (`tdlight-telegram-bot-api`)  
+2. Telegram Bot Token  
+3. Target Telegram Channel ID  
+4. Video files supported by Telegram's streaming player (H.264 MP4/MKV recommended for direct playback).
 
-1. `ctbrec` **5.3.3+**  
-2. Local Telegram API (`tdlight-telegram-bot-api`)  
-3. Telegram Bot  
-4. Telegram Channel  
+---
+
+## 🧪 Testing (Mock Data)
+
+To test the application logic without an existing metadata library:
+
+1.  **Prepare Data:** Place video files (`.mp4`, `.mkv`) in a local folder.
+2.  **Generate Metadata:** Run the provided Python script to generate the JSON sidecars expected by the parser.
+    ```bash
+    # Generates "Clean Schema" metadata for all videos in the folder
+    python tools/generate_mock_data.py ./path/to/my_videos
+    ```
+3.  **Configure:** Update `config/config.ini` so `RECORDINGS_JSON_PATH` points to your video folder.
+4.  **Run:** Launch TeleCloud and click **Sync Metadata**. The videos will appear in the queue, organized by the generated mock channel.
 
 ---
 
@@ -35,7 +61,7 @@ It works in tandem with [ctbrec](https://github.com/0xboobface/ctbrec) and a loc
    - Replace `CHANNEL_ID` with your channel ID  
 
 2. Copy `config/config.example.ini` → `config/config.ini`  
-   - Set `RECORDINGS_JSON_PATH` to the absolute path where ctbrec outputs .json files  
+   - Set `RECORDINGS_JSON_PATH` to the absolute path where your `.json` metadata files reside.  
    - Optionally adjust `SQLITE_DB_PATH`  
 
 3. During build, config files will be auto-copied next to the executable.
@@ -46,28 +72,25 @@ It works in tandem with [ctbrec](https://github.com/0xboobface/ctbrec) and a loc
 
 1. Launch **local Telegram API** (keep default port)  
 2. Run **TeleCloud**  
-3. Press **Sync Metadata** — reads ctbrec `.json` files and finds new recordings  
-4. Press **Fill Queue** — enqueues new files  
-5. Press **Start** — begins uploading  
-6. Press **Stop** — stops after finishing the current file  
-
-If *“Create contact sheet”* is enabled in ctbrec, TeleCloud auto-detects and uploads them as reply messages to their video.
+3. Press **Sync Metadata** — parses JSON sidecars and identifies new assets.
+4. Press **Fill Queue** — validates files and populates the upload manager.
+5. Press **Start** — begins uploading video assets and linking contact sheets.
+6. Press **Stop** — gracefully stops after finishing the current file.
 
 ---
 
 ## ✅ Database
 
-The app will automatically create the SQLite database (and tables) if it doesn't already exist, you can find the links to all uploaded posts in **uploads** table.  
+The app automatically initializes a SQLite database (`telecloud.db`) to track upload state and file IDs. You can query the **uploads** table to retrieve the Telegram links for archived assets.
 
 ---
 
-## 📝 License & Badges
+## 📝 License
 
-This project and all submodules are licensed under **GNU General Public License v3.0 (GPL-3.0-or-later)**. See the [LICENSE](LICENSE) file for full terms, including attribution to third-party parts.
+This project and all submodules are licensed under **GNU General Public License v3.0 (GPL-3.0-or-later)**. See the [LICENSE](LICENSE) file for full terms.
 
 ---
 
-## 🛠 Dependencies & Licensing Notice
+## 🛠 Dependencies
 
-This project includes **telegrambotlib-qt** (from `lightX2/telegrambotlib-qt`) as a submodule.  
-That submodule is licensed under **GNU GPL v3**.
+This project includes **telegrambotlib-qt** as a submodule.
