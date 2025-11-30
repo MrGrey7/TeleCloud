@@ -9,7 +9,6 @@
 class DbManager : public QObject
 {
     Q_OBJECT
-    // Properties are excellent for QML, but if only C++, getters/setters are enough. Keeping them is fine.
     Q_PROPERTY(QString dbPath READ getDbPath WRITE setDbPath NOTIFY dbPathChanged FINAL)
     Q_PROPERTY(QString recordingsJsonPath READ getRecordingsJsonPath WRITE setRecordingsJsonPath NOTIFY recordingsJsonPathChanged FINAL)
 
@@ -25,8 +24,8 @@ public:
     void initialize();
 
 public slots:
-    void processMessage(const GenericMessage &message); // const ref
-    void writeUploadToDb(const RecordingUploadInfo &upload); // const ref
+    void processMessage(const GenericMessage &message);
+    void writeUploadToDb(const RecordingUploadInfo &upload);
 
 signals:
     void recordingsJsonPathChanged();
@@ -46,6 +45,6 @@ private:
     void updateFileStatus();
     QSet<QString> getAllJsonsFromDb();
 
-    QString m_dbPath; // Standard member prefix "m_" helps distinguish local vars from members
+    QString m_dbPath;
     QString m_recordingsJsonPath;
 };

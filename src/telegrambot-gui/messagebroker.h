@@ -3,7 +3,6 @@
 #include <QObject>
 #include "types.h"
 
-// Forward declarations only. No need to include the full headers here.
 class MainWindow;
 class BotController;
 class DbManager;
@@ -16,7 +15,7 @@ public:
 
     void connectSignals();
 
-    // Getters/Setters use raw pointers for observation (aggregation)
+    // Getters/Setters use raw pointers for observation
     MainWindow *getMainWindow() const;
     void setMainWindow(MainWindow *value);
 

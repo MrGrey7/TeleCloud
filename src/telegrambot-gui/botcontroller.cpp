@@ -1,7 +1,6 @@
 #include "botcontroller.h"
 
 // We need the full definition of TelegramBot here for unique_ptr to generate the destructor
-// Assuming the library header is available:
 #include <telegrambotlib-qt-fork>
 
 #include <QElapsedTimer>
@@ -40,23 +39,19 @@ void BotController::start()
     if(m_bot) m_bot->startMessagePulling();
 }
 
-// ... (Unchanged logic)
-
 void BotController::testSendMessages(const TelegramBotUpdate &update)
 {
     if (!m_bot || update->type != TelegramBotMessageType::Message) return;
 
-    // Access via m_bot-> (unique_ptr overloads -> operator)
     TelegramBotMessage& message = *update->message;
 
     TelegramBotMessage msgSent;
     m_bot->sendMessage(message.chat.id,
-                       QStringLiteral("This is a Testmessage"), // QStringLiteral usage
+                       QStringLiteral("This is a Testmessage"),
                        0,
                        TelegramBot::NoFlag,
                        TelegramKeyboardRequest(),
                        &msgSent);
-    // ... rest of function
 }
 
 void BotController::testUpload()

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QMainWindow>
-#include <memory> // for std::unique_ptr
+#include <memory>
 #include "types.h"
 
 namespace Ui {
@@ -35,7 +35,6 @@ private slots:
     void on_button_updateFileStatus_clicked();
 
 private:
-    // Use unique_ptr for automatic memory management of the UI class
     std::unique_ptr<Ui::MainWindow> ui;
 
     qint64 m_queueSizeBytes = 0;

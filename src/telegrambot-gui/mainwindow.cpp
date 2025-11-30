@@ -59,7 +59,6 @@ void MainWindow::updateQueueSize(int size) {
 }
 
 void MainWindow::updateTotalQueueFileSize(qint64 queueSizeBytes) {
-    // Use static_cast for intention
     ui->progressBar_uploadVideos->setMaximum(static_cast<int>(queueSizeBytes / 1000000));
 }
 

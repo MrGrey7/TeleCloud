@@ -2,11 +2,9 @@
 
 #include <QObject>
 #include <QQueue>
-#include <memory> // for std::unique_ptr
+#include <memory>
 #include "types.h"
 
-// FIX: Include the library here because we cannot forward declare
-// TelegramBotUpdate if it is a typedef in the library.
 #include <telegrambotlib-qt-fork>
 
 class BotController : public QObject

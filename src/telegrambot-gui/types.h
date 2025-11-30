@@ -7,8 +7,7 @@
 
 #define qNamedDebug() qDebug() << Q_FUNC_INFO
 
-// Modern C++: Use constexpr char* for keys.
-// This avoids constructing QString objects at static initialization time.
+
 namespace ConfigKeys {
 constexpr const char* BotApiToken        = "BOT_API_TOKEN";
 constexpr const char* ChannelId          = "CHANNEL_ID";
